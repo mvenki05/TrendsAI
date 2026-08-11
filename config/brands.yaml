@@ -1,0 +1,30 @@
+# Tyson brand portfolio & capability context — used by the White Space Scout
+# (src/lab.py) buildability gate. Config over code: edit here, not in prompts.
+
+company: >
+  Tyson Foods is a protein-centric food company. Core capabilities: chicken
+  (nuggets, strips, tenders, wings, patties), pork and beef processing, sausage
+  (fresh, smoked, premium), hot dogs, deli/lunch meat, breakfast proteins,
+  breaded/fried prepared foods, frozen and refrigerated meals, handhelds
+  (sandwiches, burritos, wraps), bowls, and snacking proteins. Tyson does NOT
+  make beverages, candy, dairy, baked sweets, supplements, or alcohol.
+
+brands:
+  - name: Tyson
+    plays: "Chicken — nuggets, strips, tenders, wings, frozen and fresh protein; family meals"
+  - name: Jimmy Dean
+    plays: "Breakfast — sausage, breakfast sandwiches, bowls, burritos, morning handhelds"
+  - name: Ball Park
+    plays: "Hot dogs, grilling, game day, stadium-style foods"
+  - name: Hillshire Farm
+    plays: "Deli/lunch meat, smoked sausage, protein snacking"
+  - name: Aidells
+    plays: "Premium sausage, meatballs, chef-driven flavors"
+
+manufacturing_lines:
+  - breading and frying (nuggets, tenders, patties, corn-dog style)
+  - sausage extrusion and smoking
+  - handheld assembly (sandwiches, burritos, wraps, stuffed formats)
+  - frozen meal and bowl assembly
+  - deli slicing and packaging
+  - fully-cooked / ready-to-eat proteins

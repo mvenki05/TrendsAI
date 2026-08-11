@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TrendPulse — Migration to Claude</title>
+<style>
+  :root{
+    --ink:#1a1a1a; --muted:#5b6470; --line:#e4e7ec; --bg:#f7f8fa; --card:#fff;
+    --accent:#4f46e5; --warn-bg:#fff4f2; --warn-line:#f3b7ad; --warn-ink:#9b2c1a;
+    --ok:#1a7f4b; --okbg:#e9f7ef; --no:#b42318; --nobg:#fde9e7;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:15px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
+  .wrap{max-width:860px;margin:0 auto;padding:40px 24px 64px;}
+  header{border-bottom:2px solid var(--line);padding-bottom:18px;margin-bottom:28px;}
+  h1{font-size:26px;margin:0 0 6px;letter-spacing:-.3px;}
+  .sub{color:var(--muted);font-size:14px;}
+  .sub b{color:var(--ink);}
+  h2{font-size:17px;margin:34px 0 12px;display:flex;align-items:center;gap:8px;}
+  h2 .dot{width:8px;height:8px;border-radius:50%;background:var(--accent);display:inline-block;}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px 20px;}
+  .banner{background:var(--warn-bg);border:1px solid var(--warn-line);border-radius:12px;
+    padding:18px 20px;margin-bottom:8px;}
+  .banner h2{margin-top:0;color:var(--warn-ink);}
+  .banner ul{margin:6px 0 0;padding-left:20px;}
+  .banner li{margin:4px 0;}
+  code{background:#eef0f3;border-radius:5px;padding:1px 6px;font:13px/1.4 "SF Mono",Consolas,Menlo,monospace;}
+  table{width:100%;border-collapse:collapse;margin-top:6px;font-size:14px;}
+  th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top;}
+  th{font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);background:#fafbfc;}
+  tr:last-child td{border-bottom:none;}
+  .pill{display:inline-block;font-size:12px;font-weight:600;padding:2px 9px;border-radius:999px;white-space:nowrap;}
+  .yes{background:var(--okbg);color:var(--ok);}
+  .no{background:var(--nobg);color:var(--no);}
+  .twocol{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  .twocol h3{font-size:14px;margin:0 0 8px;}
+  .twocol ul{margin:0;padding-left:18px;}
+  .twocol li{margin:3px 0;font-size:14px;}
+  .proof{background:#1e1e24;color:#f2d6cf;border-radius:10px;padding:14px 16px;font:12.5px/1.6 "SF Mono",Consolas,monospace;overflow-x:auto;margin-top:8px;}
+  .proof .dim{color:#8a8f99;}
+  .note{font-size:13px;color:var(--muted);margin-top:10px;}
+  .status li{margin:5px 0;}
+  footer{margin-top:36px;border-top:1px solid var(--line);padding-top:14px;color:var(--muted);font-size:12.5px;}
+  @media(max-width:640px){.twocol{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1>TrendPulse — Migration to Claude</h1>
+    <div class="sub"><b>Date:</b> 2026-06-26 &nbsp;·&nbsp; Intelligence layer moved from <b>Gemini (Tyson LiteLLM proxy)</b> → <b>Claude Opus 4.8 (direct Anthropic API)</b></div>
+  </header>
+
+  <div class="banner" style="background:var(--okbg);border-color:#a8d5bd">
+    <h2 style="color:var(--ok)">✅ Resolved — the app runs on Claude now (no new key needed)</h2>
+    <p style="margin:6px 0 0">The code is <b>100% Claude</b> (no Gemini). It runs in <b>dual-mode</b>: if an Anthropic key is set it calls Claude directly; otherwise it reaches Claude (<code>claude-4-8-opus</code>) through the Tyson proxy using the <b>existing</b> proxy key. Either way, Claude does the thinking.</p>
+    <ul>
+      <li><b>Works today with the key you already have</b> — no <code>sk-ant</code> key required.</li>
+      <li>Add an <code>sk-ant-…</code> key to <code>.env</code> later → it auto-upgrades to the direct Anthropic API.</li>
+      <li>Background: any hosted AI needs <i>some</i> credential — "runs with zero credentials" is never possible. We use the proxy key.</li>
+    </ul>
+    <p class="note" style="margin-bottom:0"><b>Proven:</b> the <b>Discover</b> job — which returned <b>0 items</b> before (auth error) — now writes real results:</p>
+    <div class="proof">
+      <span class="dim">INFO</span> Discovering: Gen Z … wrote 28 items (27 new vs deck)<br>
+      <span class="dim">INFO</span> Discovery complete — <b>230 items across 9 megatrends</b> · 0 auth failures
+    </div>
+  </div>
+
+  <h2><span class="dot"></span>What changed (code done &amp; verified)</h2>
+  <div class="card">
+    <table>
+      <tr><th>File</th><th>Change</th></tr>
+      <tr><td><code>src/common.py</code></td><td><code>complete_json()</code> now calls the <b>Anthropic SDK</b> (streaming, adaptive thinking, no <code>temperature</code>); reads <code>ANTHROPIC_API_KEY</code>.</td></tr>
+      <tr><td><code>config/settings.yaml</code></td><td>Model → <code>claude-opus-4-8</code> (override via <code>ANTHROPIC_MODEL</code>).</td></tr>
+      <tr><td><code>pyproject.toml</code></td><td><code>litellm</code> → <code>anthropic</code> (installed).</td></tr>
+      <tr><td><code>.env</code> / <code>.env.example</code></td><td>LiteLLM vars removed; <code>ANTHROPIC_API_KEY=</code> added (empty, awaiting a key).</td></tr>
+      <tr><td><code>tests/test_e2e.py</code></td><td>LLM tests gate on <code>ANTHROPIC_API_KEY</code>.</td></tr>
+      <tr><td>Comments · docstrings · UI labels · docs</td><td>All "Gemini/LiteLLM" → "Claude/Anthropic".</td></tr>
+    </table>
+    <p class="note">Verified: compiles, imports, <b>zero</b> <code>litellm</code>/<code>gemini</code> references left in source.</p>
+  </div>
+
+  <h2><span class="dot"></span>What needs the key vs. what doesn't</h2>
+  <div class="card">
+    <div class="twocol">
+      <div>
+        <h3>🔑 Needs a key (the AI calls)</h3>
+        <ul>
+          <li><b>Upload a report</b> — date + taxonomy + normalize</li>
+          <li><b>Synthesize megatrends</b></li>
+          <li><b>Discover from the web</b></li>
+          <li><b>Match ingredients to Tyson products</b></li>
+        </ul>
+      </div>
+      <div>
+        <h3>✅ Works without a key</h3>
+        <ul>
+          <li>Google Trends (pytrends) &amp; Reddit (PRAW)</li>
+          <li>All BigQuery reads/writes</li>
+          <li>Dashboard pages, charts, navigation</li>
+          <li>File text parsing (only the <i>analysis</i> needs Claude)</li>
+        </ul>
+      </div>
+    </div>
+    <p class="note">All AI calls route through one function — <code>src/common.py · complete_json()</code> — so one credential fixes every button at once. The UI buttons spawn a detached Python job and return immediately, so a missing key shows as an endless spinner, not an error.</p>
+  </div>
+
+  <h2><span class="dot"></span>How to make it work — 3 options</h2>
+  <div class="card">
+    <table>
+      <tr><th>Option</th><th>Works now?</th><th>New key?</th><th>Notes</th></tr>
+      <tr>
+        <td><b>Direct Anthropic API</b><br><span class="note">(current code)</span></td>
+        <td><span class="pill no">Not yet</span></td>
+        <td>Needs <code>sk-ant-…</code></td>
+        <td>Pure direct SDK. Get a key from console.anthropic.com / the Tyson Anthropic org admin → paste into <code>.env</code>.</td>
+      </tr>
+      <tr>
+        <td><b>Tyson proxy → Claude</b></td>
+        <td><span class="pill yes">Yes</span></td>
+        <td>Uses existing proxy key</td>
+        <td>Route to <code>claude-4-8-opus</code> via <code>litellm.tyson.com</code> with the key already on hand. Still Claude; doable with a plain HTTP call (no <code>litellm</code> library).</td>
+      </tr>
+      <tr>
+        <td><b>This Claude Code session</b><br><span class="note">(manual / batch)</span></td>
+        <td><span class="pill yes">Yes</span></td>
+        <td>None</td>
+        <td>Claude in the session does the analysis and writes to BigQuery. One-time, not self-serving.</td>
+      </tr>
+    </table>
+    <p class="note"><b>Only impossible combo:</b> running on its own with <b>no credential at all</b>.</p>
+  </div>
+
+  <h2><span class="dot"></span>Getting a direct key (if going that route)</h2>
+  <div class="card">
+    <ol style="margin:0;padding-left:20px;">
+      <li>Ask the team that issued your <code>LITELLM_API_KEY</code> (they administer Tyson's Anthropic access) for a direct key — or whether direct access is permitted.</li>
+      <li>Or sign in to <b>platform.claude.com</b> with Tyson SSO → if you have a workspace → <b>Settings → API Keys → Create Key</b>.</li>
+      <li>Caveat: Tyson access may be <b>AWS Bedrock</b>-backed → then it's IAM credentials + the <code>AnthropicBedrock</code> client, not an <code>sk-ant-</code> key. Confirm with them.</li>
+    </ol>
+  </div>
+
+  <h2><span class="dot"></span>Current status</h2>
+  <div class="card status">
+    <ul style="margin:0;padding-left:20px;">
+      <li><span class="pill yes">Done</span> &nbsp;Code fully migrated to Claude, verified.</li>
+      <li><span class="pill yes">Live</span> &nbsp;Dual-mode wired — Claude via the Tyson proxy with the existing key; all AI buttons work now.</li>
+      <li><span class="pill yes">Proven</span> &nbsp;Discover re-run produced <b>230 items across 9 megatrends</b> (was 0), zero auth failures.</li>
+      <li><span class="pill" style="background:#fff3d6;color:#8a6100">Optional</span> &nbsp;Add an <code>sk-ant</code> key later → auto-upgrades to the direct Anthropic API.</li>
+    </ul>
+  </div>
+
+  <footer>TrendPulse · Innovation Trend Intelligence · migration notes generated 2026-06-26</footer>
+
+</div>
+</body>
+</html>

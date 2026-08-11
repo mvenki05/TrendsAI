@@ -1,0 +1,71 @@
+# TrendLens — Tyson "permission to play" universes for innovation-idea scoring.
+# Replaces the old binary "does Tyson already make this SKU?" with tiered permission:
+#   Core     = meat/protein Tyson is built for (anything meat is in play, even a new format)
+#   Adjacent = the wider protein universe OR an occasion a Tyson brand owns (new for Tyson, but credible)
+#   Stretch  = outside meat, protein, and owned occasions (a real leap — surfaced, but flagged)
+#
+# Editable by the team — the scorer reads these lists, nothing is hardcoded in Python.
+
+core_meat:                 # any format containing these => Core (Tyson's home turf)
+  - chicken
+  - pork
+  - beef
+  - sausage
+  - bacon
+  - franks
+  - hot dog
+  - corn dog
+  - nugget
+  - tender
+  - meatball
+  - deli
+  - meat
+  - patties
+  - ham
+  - wing
+
+protein_universe:          # NOT necessarily meat, but "still protein" => Adjacent
+  - protein bar
+  - protein chip
+  - protein shake
+  - protein powder
+  - protein cup
+  - protein snack
+  - protein waffle
+  - protein pancake
+  - protein cereal
+  - protein pasta
+  - bone broth   # meat-derived protein, but a beverage form Tyson doesn't make => Adjacent
+  - jerky
+
+# The occasion each Tyson brand credibly OWNS. An idea's occasion follows its brand
+# (that's the permission the lead described — "Jimmy Dean owns breakfast"). Tyson itself
+# spans everyday meals + on-the-go, so it falls back to format keywords.
+brand_occasions:
+  "Jimmy Dean":         breakfast
+  "Ball Park":          game day
+  "Hillshire Farm":     snacking
+  "Hillshire Snacking": snacking
+  "Aidells":            premium dinner
+  "Wright":             breakfast          # bacon = breakfast occasion
+  "State Fair":         game day snacking
+  "Open Prairie":       premium dinner     # premium beef
+  "Chairman's Reserve": premium dinner
+  "Tyson":              null               # spans occasions — use format keywords below
+
+# Only used when the brand doesn't pin an occasion (i.e. Tyson).
+occasion_keywords:
+  breakfast:  ["breakfast", "waffle", "pancake", "scramble", "omelet", "burrito"]
+  on_the_go:  ["cup", "portable", "single-serve", "snack", "grab", "bites", "strip"]
+  dinner:     ["dinner", "entree", "meal", "family pack", "value pack", "nugget"]
+
+# Formats we explicitly consider a stretch even if they brush the protein world
+# (Tyson has no manufacturing/brand permission — flag honestly, don't hide).
+stretch_flags:
+  - collagen
+  - beauty
+  - soda
+  - beverage
+  - drink
+  - gummy
+  - supplement

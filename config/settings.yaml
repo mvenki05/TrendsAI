@@ -1,0 +1,91 @@
+# TrendPulse — System Settings
+# Copy to settings.local.yaml for environment-specific overrides
+
+bigquery:
+  project_id: "dev-2534-puw-growth-2295ed"  # GCP project ID (from default ADC)
+  dataset: "trend_intelligence"              # BigQuery dataset name
+  location: "US"                             # BigQuery dataset location
+
+ingestion:
+  google_trends:
+    batch_size: 5                        # Terms per pytrends request (max 5)
+    delay_seconds: 2                     # Delay between requests
+    backoff_max_seconds: 60              # Max exponential backoff on 429
+    backfill_months: 12                  # Historical data to pull on first run
+    geo: "US"                            # Geography filter
+    timeframe: "today 12-m"             # Default pytrends timeframe
+
+  reddit:
+    posts_per_subreddit: 50              # Top posts to pull per sub per week
+    sort_by: "top"                       # Sort method (top, hot, new)
+    time_filter: "week"                  # Time window for top posts
+
+market:                                  # Open Food Facts market scan (the /market page)
+  search_base: "https://search.openfoodfacts.org/search"  # Search-a-licious (legacy cgi/search.pl & /api/v2 503 under load)
+  country_tag: "en:united-states"        # Filter market products to the US
+  top_ingredients: 50                    # Top rising ingredients (across all reports) to scan
+  products_per_term: 8                   # Sample products kept per ingredient
+  request_delay_seconds: 0.5             # Polite pacing between OFF requests
+  user_agent: "TrendLens/0.1 (venkatesh.mandapati@tyson.com)"
+
+lab:                                     # White Space Scout — new ideas the deck-driven funnel can't see (the /lab page)
+  seed_queries:                          # Category-anchored white space: new formats in Tyson's power alleys, globally
+    - "new fried chicken format Korea"
+    - "chicken snack new product Japan"
+    - "Korean corn dog new format"
+    - "new breakfast handheld product international"
+    - "protein breakfast new format Japan"
+    - "meat snack innovation Europe"
+    - "charcuterie snacking new product"
+    - "new hot dog format international"
+    - "new sausage product format Europe"
+    - "bacon product innovation launch"
+    - "new frozen appetizer format launch"
+    - "rotisserie chicken meal new format"
+    - "viral chicken dish TikTok"
+    - "street food skewer trend United States"
+  max_body_fetch: 30                     # Articles to fetch full text for (rest headline+snippet)
+  max_candidates: 60                     # Idea candidates kept per run (by support) before the novelty gate
+  novelty_floor: 40                      # Min 0-100 surprise score to survive extraction (LTO flavor ≈ 10)
+
+trend_map:                               # Our own megatrend map, reverse-engineered from the internet (the /map page)
+  seed_queries:                          # Broad world + US evidence: trends, ingredients, behaviours, launches
+    - "global food trends 2026"
+    - "US food trends 2026"
+    - "protein trends around the world"
+    - "meat consumption trends Asia"
+    - "food and drink trends Europe 2026"
+    - "functional food trend Japan"
+    - "global snacking trends"
+    - "breakfast trends around the world"
+    - "flavor trends 2026"
+    - "emerging food ingredients 2026"
+    - "consumer food behavior trends"
+    - "grocery shopping trends United States"
+    - "restaurant menu trends world"
+    - "food culture trend Latin America"
+  max_body_fetch: 30                     # Articles to fetch full text for (rest headline+snippet)
+  support_floor: 2                       # Min distinct publishers to keep a news-only entity
+  max_megatrends: 8                      # Cap on bottom-up megatrends
+
+llm:
+  model: "claude-opus-4-8"               # Direct Anthropic API (ANTHROPIC_MODEL env overrides)
+  max_tokens: 32000                      # Total output budget incl. adaptive thinking tokens
+  temperature: 0.3                       # Unused — Opus 4.8 rejects sampling params; kept for reference
+
+scoring:
+  weights:
+    manufacturing_adjacency: 0.25
+    brand_permission: 0.20
+    channel_readiness: 0.15
+    competitive_density: 0.20
+    trend_momentum: 0.20
+  velocity_threshold: 50                 # Minimum velocity score to flag as signal
+  persistence_weeks: 2                   # Weeks a signal must persist before flagging
+
+briefs:
+  weekly_radar:
+    top_n_signals: 5                     # Number of signals in weekly digest
+    day_of_week: "Monday"
+  opportunity_report:
+    top_n_opportunities: 5               # Number of opportunities in monthly report

@@ -1,0 +1,42 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+
+# Node / Next.js
+dashboard/node_modules/
+dashboard/.next/
+dashboard/.env.local
+dashboard/out/
+
+# Uploaded PDFs / source documents (large, private)
+uploads/
+!uploads/.gitkeep
+
+# Generated output
+output/
+data/
+
+# Large binary source docs (ingested into BigQuery already)
+docs/*.pptx
+docs/*.pdf
+
+# Environment & secrets
+.env
+.env.*
+*.key
+
+# Personal files
+Resume_Venkatesh_Mandapati.html
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+*.swp

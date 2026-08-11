@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TrendLens — How It Works (Data, GCP & AI)</title>
+<style>
+  :root{
+    --bg:#0b1120; --panel:#0f172a; --panel2:#111c33; --border:#1e293b;
+    --text:#e2e8f0; --muted:#94a3b8; --dim:#64748b;
+    --accent:#34d399; --accent2:#818cf8; --pink:#e879f9; --amber:#fbbf24; --cyan:#22d3ee; --rose:#fb7185;
+    --code:#0a0f1d;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--text);font:15px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+  a{color:var(--accent2);text-decoration:none}
+  a:hover{text-decoration:underline}
+  code,kbd{font-family:"SF Mono",ui-monospace,"Cascadia Code",Consolas,monospace;font-size:.86em}
+  code.inline{background:var(--code);border:1px solid var(--border);border-radius:5px;padding:1px 6px;color:#cbd5e1}
+  .layout{display:flex;min-height:100vh}
+  /* Sidebar */
+  nav.toc{position:sticky;top:0;align-self:flex-start;width:270px;height:100vh;overflow-y:auto;
+    background:#080d18;border-right:1px solid var(--border);padding:22px 18px;flex:none}
+  nav.toc .brand{font-weight:800;font-size:18px;letter-spacing:-.3px;color:#fff}
+  nav.toc .tag{color:var(--dim);font-size:11px;text-transform:uppercase;letter-spacing:.12em;margin-top:2px}
+  nav.toc ol{list-style:none;padding:0;margin:18px 0 0;counter-reset:s}
+  nav.toc li{counter-increment:s;margin:1px 0}
+  nav.toc li a{display:flex;gap:9px;padding:7px 9px;border-radius:7px;color:var(--muted);font-size:13.5px}
+  nav.toc li a::before{content:counter(s);color:var(--dim);font-variant-numeric:tabular-nums;min-width:14px;text-align:right}
+  nav.toc li a:hover{background:var(--panel);color:var(--text);text-decoration:none}
+  /* Main */
+  main{flex:1;max-width:980px;margin:0 auto;padding:46px 48px 120px}
+  header.hero h1{font-size:32px;letter-spacing:-.8px;margin:0 0 6px;color:#fff}
+  header.hero p.lede{color:var(--muted);font-size:16.5px;margin:0 0 14px;max-width:70ch}
+  .pillrow{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 6px}
+  .pill{background:var(--panel);border:1px solid var(--border);border-radius:999px;padding:5px 13px;font-size:12.5px;color:var(--muted)}
+  .pill b{color:var(--text);font-weight:600}
+  section{margin-top:54px;scroll-margin-top:20px}
+  h2{font-size:23px;letter-spacing:-.4px;margin:0 0 4px;color:#fff;display:flex;align-items:baseline;gap:10px}
+  h2 .n{font-size:13px;color:var(--accent);font-weight:700;font-variant-numeric:tabular-nums}
+  h3{font-size:16px;color:#fff;margin:26px 0 8px}
+  p{margin:10px 0}
+  .sub{color:var(--muted)}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:20px 22px;margin:16px 0}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  @media(max-width:880px){.grid2,.grid3{grid-template-columns:1fr}}
+  .stat{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:14px 16px}
+  .stat .v{font-size:26px;font-weight:800;color:#fff;font-variant-numeric:tabular-nums}
+  .stat .k{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-top:2px}
+  /* tables */
+  table{width:100%;border-collapse:collapse;margin:12px 0;font-size:13.5px}
+  th,td{text-align:left;padding:8px 11px;border-bottom:1px solid var(--border);vertical-align:top}
+  th{color:var(--muted);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.06em;background:var(--panel2)}
+  td code{color:var(--cyan)}
+  tr:last-child td{border-bottom:none}
+  .req{color:var(--rose);font-size:11px;font-weight:700}
+  .null{color:var(--dim);font-size:11px}
+  /* code blocks */
+  pre{background:var(--code);border:1px solid var(--border);border-radius:11px;padding:15px 17px;overflow-x:auto;margin:12px 0;line-height:1.5}
+  pre code{color:#cbd5e1;font-size:12.8px}
+  .c-kw{color:#c792ea}.c-fn{color:#82aaff}.c-str{color:#c3e88d}.c-com{color:#5c6a82;font-style:italic}.c-num{color:#f78c6c}
+  /* flow */
+  .flow{display:flex;flex-direction:column;gap:0;margin:18px 0}
+  .step{display:flex;gap:16px;position:relative;padding-bottom:22px}
+  .step:not(:last-child)::before{content:"";position:absolute;left:19px;top:40px;bottom:-2px;width:2px;background:var(--border)}
+  .step .dot{flex:none;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:15px;border:2px solid;z-index:1}
+  .step .body{flex:1;padding-top:6px}
+  .step .body h4{margin:0 0 3px;font-size:15.5px;color:#fff}
+  .step .body .meta{font-size:12px;color:var(--dim);margin-bottom:6px}
+  .step .body p{margin:5px 0;font-size:14px;color:var(--muted)}
+  .d-ai{border-color:var(--accent2);background:rgba(129,140,248,.12);color:#c7d2fe}
+  .d-ext{border-color:var(--cyan);background:rgba(34,211,238,.12);color:#a5f3fc}
+  .d-bq{border-color:var(--amber);background:rgba(251,191,36,.12);color:#fde68a}
+  .d-app{border-color:var(--accent);background:rgba(52,211,153,.12);color:#a7f3d0}
+  /* badges */
+  .badge{display:inline-block;padding:2px 9px;border-radius:6px;font-size:11px;font-weight:700;letter-spacing:.03em;vertical-align:middle}
+  .b-ai{background:rgba(129,140,248,.16);color:#c7d2fe;border:1px solid rgba(129,140,248,.4)}
+  .b-ext{background:rgba(34,211,238,.16);color:#a5f3fc;border:1px solid rgba(34,211,238,.4)}
+  .b-bq{background:rgba(251,191,36,.16);color:#fde68a;border:1px solid rgba(251,191,36,.4)}
+  .b-write{background:rgba(251,113,133,.16);color:#fecdd3;border:1px solid rgba(251,113,133,.4)}
+  .b-read{background:rgba(52,211,153,.16);color:#a7f3d0;border:1px solid rgba(52,211,153,.4)}
+  .legend{display:flex;flex-wrap:wrap;gap:10px;margin:14px 0}
+  .legend span{font-size:12.5px;color:var(--muted)}
+  .note{border-left:3px solid var(--accent);background:rgba(52,211,153,.06);padding:11px 15px;border-radius:0 9px 9px 0;margin:14px 0;font-size:14px;color:#cbd5e1}
+  .warn{border-left:3px solid var(--amber);background:rgba(251,191,36,.06)}
+  .kv{font-size:13.5px}
+  .kv b{color:#fff;font-weight:600}
+  .arrow{color:var(--dim);padding:0 4px}
+  hr{border:none;border-top:1px solid var(--border);margin:30px 0}
+  .filechip{font-family:ui-monospace,monospace;font-size:12px;background:var(--code);border:1px solid var(--border);border-radius:6px;padding:2px 8px;color:#93c5fd}
+  footer{margin-top:70px;padding-top:22px;border-top:1px solid var(--border);color:var(--dim);font-size:12.5px}
+</style>
+</head>
+<body>
+<div class="layout">
+
+<nav class="toc">
+  <div class="brand">TrendLens</div>
+  <div class="tag">How It Works</div>
+  <ol>
+    <li><a href="#overview">Overview</a></li>
+    <li><a href="#stack">The stack & where things run</a></li>
+    <li><a href="#flow">End-to-end data flow</a></li>
+    <li><a href="#tables">What's stored in GCP (4 tables)</a></li>
+    <li><a href="#ai">Everything the AI does</a></li>
+    <li><a href="#external">External data (Google Trends)</a></li>
+    <li><a href="#reads">What the app reads back</a></li>
+    <li><a href="#writes">Write map — who writes what</a></li>
+    <li><a href="#references">What the AI grounds on</a></li>
+  </ol>
+</nav>
+
+<main>
+<header class="hero" id="overview">
+  <h1>TrendLens — How It Works</h1>
+  <p class="lede">An upload-driven trend intelligence app. You drop in a market/innovation deck (<code class="inline">.pptx</code>/<code class="inline">.pdf</code>); AI extracts its full trend taxonomy <em>strictly from the document</em>, real Google Trends data is layered on for momentum, and a cross-file synthesis ranks the strongest megatrends. This page documents exactly what is stored, where, and what the AI is doing — end to end.</p>
+  <div class="pillrow">
+    <span class="pill">GCP project <b>dev-2534-puw-growth-2295ed</b></span>
+    <span class="pill">BigQuery dataset <b>trend_intelligence</b> (US)</span>
+    <span class="pill">LLM <b>claude-opus-4-8</b> via Anthropic API</span>
+    <span class="pill">UI <b>Next.js dashboard</b></span>
+  </div>
+  <div class="legend">
+    <span><span class="badge b-ai">AI</span> Claude call</span>
+    <span><span class="badge b-ext">EXTERNAL</span> Google Trends (real browser)</span>
+    <span><span class="badge b-bq">BIGQUERY</span> stored in GCP</span>
+    <span><span class="badge b-write">WRITES</span> creates/replaces rows</span>
+    <span><span class="badge b-read">READS</span> queried by the app</span>
+  </div>
+  <p class="sub" style="font-size:13px;margin-top:6px">Snapshot live row counts below are as of 2026-06-18, with one report loaded (<em>The Future of Protein</em>).</p>
+</header>
+
+<!-- ============================================================ -->
+<section id="stack">
+  <h2><span class="n">02</span> The stack &amp; where things run</h2>
+  <p>Two processes, one shared BigQuery dataset. The <b>Next.js dashboard</b> serves the UI and the read APIs; it also kicks off the heavy lifting by spawning <b>detached Python subprocesses</b>. All durable state lives in BigQuery — there is no separate app database.</p>
+  <div class="grid2">
+    <div class="card">
+      <h3 style="margin-top:0">Dashboard <span class="badge b-read">Next.js</span></h3>
+      <p class="sub">Folder <span class="filechip">dashboard/</span> · runs at <code class="inline">localhost:3000</code></p>
+      <ul class="kv">
+        <li>React UI: <b>reports list</b>, <b>report explorer</b>, <b>best megatrends</b>, <b>upload</b>.</li>
+        <li>API routes under <span class="filechip">app/api/*</span> query BigQuery directly via <span class="filechip">lib/bigquery.ts</span>.</li>
+        <li>Auth: <code class="inline">@google-cloud/bigquery</code> using Application Default Credentials (ADC); project from <code class="inline">BIGQUERY_PROJECT</code>.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0">Pipeline <span class="badge b-ai">Python</span></h3>
+      <p class="sub">Folder <span class="filechip">src/</span> · spawned by the dashboard</p>
+      <ul class="kv">
+        <li><span class="filechip">src/pipeline.py</span> orchestrates: extract → synthesize → measure.</li>
+        <li>Claude calls go through <span class="filechip">src/common.py</span> → Anthropic API (<code class="inline">ANTHROPIC_API_KEY</code>).</li>
+        <li>BigQuery writes via the <code class="inline">google-cloud-bigquery</code> client (ADC, project from <code class="inline">BIGQUERY_PROJECT</code>).</li>
+      </ul>
+    </div>
+  </div>
+  <div class="note">The dashboard never talks to Claude itself. When you upload a file or click <b>Measure Google Trends</b>, the API route just <code class="inline">spawn()</code>s a Python module detached and returns immediately. All AI + Google Trends + BigQuery writes happen in Python.</div>
+</section>
+
+<!-- ============================================================ -->
+<section id="flow">
+  <h2><span class="n">03</span> End-to-end data flow</h2>
+  <p>From a dropped file to a ranked dashboard. Each step is tagged by <em>what kind of work</em> it is and <em>which table it writes</em>.</p>
+
+  <div class="flow">
+    <div class="step">
+      <div class="dot d-app">1</div>
+      <div class="body">
+        <h4>Upload a deck &nbsp;<span class="badge b-write">writes file</span></h4>
+        <div class="meta">POST /api/upload &nbsp;→&nbsp; dashboard/src/app/api/upload/route.ts</div>
+        <p>The file is validated (<code class="inline">.pptx</code>/<code class="inline">.pdf</code> only), saved to <span class="filechip">uploads/&lt;report_id&gt;.ext</span>, and a new <code class="inline">report_id</code> (<code class="inline">rep_…</code>) is minted. The route then spawns <span class="filechip">python -m src.pipeline &lt;path&gt; &lt;report_id&gt;</span> <b>detached</b> and returns <code class="inline">{status:"processing"}</code> right away.</p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="dot d-ai">2</div>
+      <div class="body">
+        <h4>Extract taxonomy &nbsp;<span class="badge b-ai">AI · Claude</span> <span class="badge b-bq">reports + taxonomy_nodes</span></h4>
+        <div class="meta">src/extract_taxonomy.py · run()</div>
+        <p>Text is pulled out of the file (python-pptx / pypdf), capped at <b>120,000 chars</b>, and sent to Claude with the extraction prompt. Claude returns the full tree as JSON. Two more Claude calls then <b>normalize &amp; dedup</b> behaviours and psychographics. Rows are flattened and written; any prior rows for this <code class="inline">report_id</code> are deleted first (idempotent re-run).</p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="dot d-ai">3</div>
+      <div class="body">
+        <h4>Synthesize best megatrends &nbsp;<span class="badge b-ai">AI · Claude</span> <span class="badge b-bq">megatrend_clusters</span></h4>
+        <div class="meta">src/synthesize_megatrends.py · run()</div>
+        <p>Looks across <b>all</b> reports, asks Claude to merge equivalent megatrends into canonical clusters, then ranks them by real signals (file corroboration + rising-search count). Runs <em>before</em> the slow Google Trends step so the report is usable immediately.</p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="dot d-ext">4</div>
+      <div class="body">
+        <h4>Measure Google Trends &nbsp;<span class="badge b-ext">EXTERNAL</span> <span class="badge b-bq">trend_searches</span></h4>
+        <div class="meta">src/map_searches.py → src/trends_browser.py</div>
+        <p>For each product/ingredient's <code class="inline">search_term</code>, a real Chromium browser pulls 12 months of Google Trends interest. Growth metrics (current interest, YoY %, rising flag) are computed and written. Best-effort &amp; cached — already-measured terms are skipped. Re-triggerable any time via <span class="filechip">POST /api/measure/[id]</span>.</p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="dot d-app">5</div>
+      <div class="body">
+        <h4>Dashboard reads it back &nbsp;<span class="badge b-read">READS</span></h4>
+        <div class="meta">app/api/report/[id], /api/reports, /api/best</div>
+        <p>The UI queries BigQuery for the report, its taxonomy nodes, and its trend searches, and joins them client-side into the megatrend → subtrend → detail explorer. The Best Megatrends page reads <code class="inline">megatrend_clusters</code>.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<section id="tables">
+  <h2><span class="n">04</span> What's stored in GCP — 4 BigQuery tables</h2>
+  <p>Dataset <code class="inline">dev-2534-puw-growth-2295ed.trend_intelligence</code>. All tables are <b>month-partitioned</b> and <b>clustered</b> for cheap filtering by report. Schema is defined in <span class="filechip">scripts/setup_bigquery.py</span>.</p>
+
+  <div class="grid3">
+    <div class="stat"><div class="v">1</div><div class="k">reports</div></div>
+    <div class="stat"><div class="v">234</div><div class="k">taxonomy_nodes</div></div>
+    <div class="stat"><div class="v">106</div><div class="k">trend_searches</div></div>
+  </div>
+  <div class="grid3" style="margin-top:12px">
+    <div class="stat"><div class="v">6</div><div class="k">megatrend_clusters</div></div>
+    <div class="stat"><div class="v">6 / 26</div><div class="k">megatrends / subtrends</div></div>
+    <div class="stat"><div class="v">48 / 30</div><div class="k">products / ingredients</div></div>
+  </div>
+
+  <h3>① <code>reports</code> — one row per uploaded file <span class="badge b-write">written by extract_taxonomy</span></h3>
+  <p class="sub">Provenance &amp; processing status for each deck. Partitioned on <code class="inline">uploaded_at</code>, clustered by <code class="inline">report_id</code>.</p>
+  <table>
+    <tr><th>Column</th><th>Type</th><th>What it holds</th></tr>
+    <tr><td><code>report_id</code> <span class="req">REQ</span></td><td>STRING</td><td>Unique id, e.g. <code class="inline">rep_803a2d9e631d</code>. Joins everything together.</td></tr>
+    <tr><td><code>filename</code> <span class="req">REQ</span></td><td>STRING</td><td>Original uploaded file name.</td></tr>
+    <tr><td><code>title</code></td><td>STRING</td><td><span class="badge b-ai">AI</span> Document title / overall theme, extracted by Claude.</td></tr>
+    <tr><td><code>source_type</code></td><td>STRING</td><td><code class="inline">pptx</code> or <code class="inline">pdf</code>.</td></tr>
+    <tr><td><code>num_megatrends</code></td><td>INT64</td><td>Count of megatrends extracted.</td></tr>
+    <tr><td><code>num_nodes</code></td><td>INT64</td><td>Total taxonomy nodes extracted.</td></tr>
+    <tr><td><code>raw_text_chars</code></td><td>INT64</td><td>Characters of text pulled from the file.</td></tr>
+    <tr><td><code>status</code></td><td>STRING</td><td>Lifecycle: <code class="inline">extracted</code> → <code class="inline">mapped</code> (after Google Trends).</td></tr>
+    <tr><td><code>uploaded_at</code> <span class="req">REQ</span></td><td>TIMESTAMP</td><td>When processed (partition key).</td></tr>
+  </table>
+
+  <h3>② <code>taxonomy_nodes</code> — the extracted tree <span class="badge b-write">written by extract_taxonomy</span></h3>
+  <p class="sub">The heart of the app: one row per node. <code class="inline">parent_id</code> links the hierarchy; <code class="inline">megatrend_name</code>/<code class="inline">subtrend_name</code> are denormalized onto every row so the UI doesn't walk the tree. Partitioned on <code class="inline">created_at</code>, clustered by <code class="inline">(report_id, level)</code>. <b>100% sourced from the uploaded document.</b></p>
+  <table>
+    <tr><th>Column</th><th>Type</th><th>What it holds</th></tr>
+    <tr><td><code>node_id</code> <span class="req">REQ</span></td><td>STRING</td><td>Unique node id (prefix encodes level, e.g. <code class="inline">me_</code>, <code class="inline">su_</code>, <code class="inline">pr_</code>).</td></tr>
+    <tr><td><code>report_id</code> <span class="req">REQ</span></td><td>STRING</td><td>Links to <code class="inline">reports</code>.</td></tr>
+    <tr><td><code>parent_id</code></td><td>STRING</td><td>Parent node (null for megatrends).</td></tr>
+    <tr><td><code>level</code> <span class="req">REQ</span></td><td>STRING</td><td><code class="inline">megatrend · subtrend · product · ingredient · behaviour · psychographic</code></td></tr>
+    <tr><td><code>name</code> <span class="req">REQ</span></td><td>STRING</td><td>Node name as written / distilled from the file.</td></tr>
+    <tr><td><code>description</code></td><td>STRING</td><td>One-line grounding from the document (now populated for behaviours/psychographics too).</td></tr>
+    <tr><td><code>search_term</code></td><td>STRING</td><td><span class="badge b-ai">AI</span> Normalized Google-typeable phrase — <b>products/ingredients only</b> (e.g. "protein-fortified beverages" → "protein water").</td></tr>
+    <tr><td><code>megatrend_name</code></td><td>STRING</td><td>Denormalized ancestor.</td></tr>
+    <tr><td><code>subtrend_name</code></td><td>STRING</td><td>Denormalized ancestor.</td></tr>
+    <tr><td><code>created_at</code> <span class="req">REQ</span></td><td>TIMESTAMP</td><td>When extracted (partition key).</td></tr>
+  </table>
+
+  <h3>③ <code>trend_searches</code> — Google Trends measurements <span class="badge b-write">written by map_searches</span></h3>
+  <p class="sub">The only <b>external</b> data. One row per product/ingredient node that was measured. Partitioned on <code class="inline">week_of</code>, clustered by <code class="inline">(report_id, megatrend_name)</code>. Behaviours/psychographics are <em>not</em> measured.</p>
+  <table>
+    <tr><th>Column</th><th>Type</th><th>What it holds</th></tr>
+    <tr><td><code>search_id</code> <span class="req">REQ</span></td><td>STRING</td><td>Unique id.</td></tr>
+    <tr><td><code>report_id</code> <span class="req">REQ</span></td><td>STRING</td><td>Links to <code class="inline">reports</code>.</td></tr>
+    <tr><td><code>node_id</code> <span class="req">REQ</span></td><td>STRING</td><td>The taxonomy node measured.</td></tr>
+    <tr><td><code>node_level / node_name</code></td><td>STRING</td><td><code class="inline">product</code>/<code class="inline">ingredient</code> + original name.</td></tr>
+    <tr><td><code>term</code> <span class="req">REQ</span></td><td>STRING</td><td>The normalized term measured on Google Trends.</td></tr>
+    <tr><td><code>megatrend_name / subtrend_name</code></td><td>STRING</td><td>Denormalized ancestors (drive the rising-count rollups).</td></tr>
+    <tr><td><code>current_interest</code></td><td>INT64</td><td>Recent 4-week avg interest (0–100).</td></tr>
+    <tr><td><code>yoy_growth</code></td><td>FLOAT64</td><td>Year-over-year % change.</td></tr>
+    <tr><td><code>is_rising</code></td><td>BOOL</td><td>True if YoY ≥ 15% and interest ≥ 2 (the green ▲ badge).</td></tr>
+    <tr><td><code>has_data</code></td><td>BOOL</td><td>True if Google returned measurable interest.</td></tr>
+    <tr><td><code>week_of</code> <span class="req">REQ</span></td><td>DATE</td><td>Week captured (partition key).</td></tr>
+    <tr><td><code>captured_at</code> <span class="req">REQ</span></td><td>TIMESTAMP</td><td>When captured.</td></tr>
+  </table>
+
+  <h3>④ <code>megatrend_clusters</code> — cross-file synthesis <span class="badge b-write">written by synthesize_megatrends</span></h3>
+  <p class="sub">Powers the <b>Best Megatrends</b> page. Merges megatrends that recur across multiple uploaded files into canonical clusters, ranked by real corroboration + momentum. Rebuilt in full on every run.</p>
+  <table>
+    <tr><th>Column</th><th>Type</th><th>What it holds</th></tr>
+    <tr><td><code>cluster_id</code> <span class="req">REQ</span></td><td>STRING</td><td>Unique cluster id.</td></tr>
+    <tr><td><code>cluster_name</code> <span class="req">REQ</span></td><td>STRING</td><td><span class="badge b-ai">AI</span> Canonical megatrend name across files.</td></tr>
+    <tr><td><code>description</code></td><td>STRING</td><td><span class="badge b-ai">AI</span> Synthesized shared-theme description.</td></tr>
+    <tr><td><code>source_report_ids</code></td><td>STRING[]</td><td>Reports contributing to this cluster.</td></tr>
+    <tr><td><code>source_megatrend_names</code></td><td>STRING[]</td><td>Original per-file megatrend names that merged in.</td></tr>
+    <tr><td><code>source_filenames</code></td><td>STRING[]</td><td>Files that mention this megatrend.</td></tr>
+    <tr><td><code>file_count</code></td><td>INT64</td><td>How many files corroborate it.</td></tr>
+    <tr><td><code>rising_search_count</code></td><td>INT64</td><td>Total rising searches across the cluster.</td></tr>
+    <tr><td><code>best_score</code></td><td>FLOAT64</td><td>Ranking key = <code class="inline">file_count × 1000 + rising_search_count</code> (corroboration dominant, momentum tiebreak).</td></tr>
+    <tr><td><code>synthesized_at</code> <span class="req">REQ</span></td><td>TIMESTAMP</td><td>When synthesis ran (partition key).</td></tr>
+  </table>
+</section>
+
+<!-- ============================================================ -->
+<section id="ai">
+  <h2><span class="n">05</span> Everything the AI does</h2>
+  <p>Every AI call is <b>Claude Opus 4.8</b>, reached through the Anthropic API (<code class="inline">claude-opus-4-8</code>, adaptive thinking, max_tokens <b>32000</b>), via one helper: <span class="filechip">src/common.py · complete_json()</span>. The app makes <b>four kinds</b> of AI call. There are no others.</p>
+
+  <div class="card">
+    <h3 style="margin-top:0">AI call A — Taxonomy extraction <span class="badge b-ai">1 call per upload</span></h3>
+    <p class="kv"><b>Where:</b> <span class="filechip">src/extract_taxonomy.py · EXTRACTION_PROMPT</span> &nbsp;·&nbsp; <b>Input:</b> the deck's text (≤120k chars). <b>Output:</b> the full taxonomy as JSON. <b>Writes:</b> <code class="inline">reports.title</code> + all <code class="inline">taxonomy_nodes</code>.</p>
+    <p class="kv"><b>What it produces:</b> megatrends → subtrends → {products, ingredients, behaviours, psychographics}; a <code class="inline">search_term</code> for every product/ingredient; a 1-line description for each behaviour/psychographic.</p>
+    <pre><code><span class="c-com"># Verbatim instruction — the grounding rule:</span>
+"Extract its trend taxonomy <span class="c-str">STRICTLY FROM THIS DOCUMENT</span>
+ — do not add anything that is not supported by the text."
+
+<span class="c-com"># Form rules added in the recent quality pass (A):</span>
+behaviour      <span class="arrow">→</span> observable verb phrase  <span class="c-com">e.g. "buys direct from manufacturer"</span>
+psychographic  <span class="arrow">→</span> value/identity noun     <span class="c-com">e.g. "Convenience-seeking"</span>
+search_term    <span class="arrow">→</span> short Google-typeable phrase</code></pre>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-top:0">AI calls B — Normalize &amp; dedup <span class="badge b-ai">2 calls per upload</span></h3>
+    <p class="kv"><b>Where:</b> <span class="filechip">src/extract_taxonomy.py · NORMALIZE_PROMPT</span> (one call for behaviours, one for psychographics). <b>Input:</b> the de-duplicated list of extracted names for that type. <b>Output:</b> a map <code class="inline">raw → canonical label</code>. <b>Writes:</b> applied before the <code class="inline">taxonomy_nodes</code> insert.</p>
+    <p class="kv"><b>Why:</b> the raw extraction repeats the same idea under many subtrends ("desire for convenience and personalization" ×3). This pass merges near-duplicates into one canonical label and drops repeats within a subtrend, so the chips read cleanly and consistently.</p>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-top:0">AI call C — Cross-file megatrend clustering <span class="badge b-ai">1 call per pipeline run</span></h3>
+    <p class="kv"><b>Where:</b> <span class="filechip">src/synthesize_megatrends.py · CLUSTER_PROMPT</span>. <b>Input:</b> every megatrend name across all reports + its source filename. <b>Output:</b> canonical clusters with member indices. <b>Writes:</b> all of <code class="inline">megatrend_clusters</code>.</p>
+    <p class="kv"><b>Note:</b> the AI only decides <em>which names mean the same thing</em>. The <b>ranking is not AI</b> — <code class="inline">best_score</code> is computed from real signals (file count + rising-search count). Falls back to one-cluster-per-megatrend if the call fails.</p>
+  </div>
+
+  <div class="note warn"><b>What the AI does NOT do:</b> it does not invent trends, pull from outside knowledge, score opportunities, or decide rankings. Extraction is document-bound; clustering only groups names; momentum and ranking come from real Google Trends data and arithmetic.</div>
+</section>
+
+<!-- ============================================================ -->
+<section id="external">
+  <h2><span class="n">06</span> External data — Google Trends (the only outside source)</h2>
+  <p><span class="badge b-ext">EXTERNAL</span> Implemented in <span class="filechip">src/trends_browser.py</span>, driven by <span class="filechip">src/map_searches.py</span>. This is <b>not</b> AI — it's a real measurement.</p>
+  <div class="grid2">
+    <div class="card">
+      <h3 style="margin-top:0">How it's fetched</h3>
+      <ul class="kv">
+        <li>A real <b>Chromium</b> session (Playwright) opens <code class="inline">trends.google.com/trends/explore</code>, geo <b>US</b>, timeframe <b>today 12-m</b>.</li>
+        <li>It captures the chart's own <code class="inline">widgetdata/multiline</code> response → weekly interest series. Throttled far less than the pytrends back-channel.</li>
+        <li>Batches of <b>5 terms</b>, ~<b>5s</b> pacing between batches. Best-effort: a blocked batch yields no data, marked <code class="inline">has_data=false</code>.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0">How metrics are computed</h3>
+      <p class="sub" style="margin-top:0"><span class="filechip">map_searches.py · metrics_for()</span></p>
+      <ul class="kv">
+        <li><b>current_interest</b> = avg of last 4 weeks.</li>
+        <li><b>yoy_growth</b> = current vs first 4 weeks, as %.</li>
+        <li><b>is_rising</b> = yoy ≥ <b>15%</b> AND interest ≥ <b>2</b>.</li>
+      </ul>
+      <p class="kv"><b>Caching:</b> terms already measured (with data) are skipped on re-runs, so coverage accumulates and re-measures are cheap.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<section id="reads">
+  <h2><span class="n">07</span> What the app reads back</h2>
+  <p>All read endpoints are thin BigQuery queries via <span class="filechip">dashboard/src/lib/bigquery.ts</span> (which also flattens BigQuery's typed <code class="inline">{value:…}</code> wrappers into plain scalars). Parameterized where they take input.</p>
+  <table>
+    <tr><th>Endpoint</th><th>Reads</th><th>Returns</th></tr>
+    <tr><td><code>GET /api/reports</code></td><td><span class="badge b-bq">reports</span></td><td>List of all uploaded reports (newest first, ≤100). Powers the home list.</td></tr>
+    <tr><td><code>GET /api/report/[id]</code></td><td><span class="badge b-bq">reports</span> + <span class="badge b-bq">taxonomy_nodes</span> + <span class="badge b-bq">trend_searches</span></td><td>Three queries in parallel (filtered by <code class="inline">report_id</code>). The page joins nodes ↔ searches by <code class="inline">node_id</code> and builds the 3-pane explorer.</td></tr>
+    <tr><td><code>GET /api/best</code></td><td><span class="badge b-bq">megatrend_clusters</span></td><td>Clusters ordered by <code class="inline">best_score</code> desc. Powers Best Megatrends.</td></tr>
+    <tr><td><code>POST /api/upload</code></td><td>— (write side)</td><td>Saves file, spawns <code class="inline">src.pipeline</code>. Returns <code class="inline">report_id</code>.</td></tr>
+    <tr><td><code>POST /api/measure/[id]</code></td><td>— (write side)</td><td>Spawns <code class="inline">src.map_searches</code> to (re)measure Google Trends.</td></tr>
+  </table>
+  <pre><code><span class="c-com">// The core read — app/api/report/[id]/route.ts (parameterized, parallel)</span>
+<span class="c-kw">const</span> [report, nodes, searches] = <span class="c-kw">await</span> Promise.<span class="c-fn">all</span>([
+  <span class="c-fn">query</span>(<span class="c-str">`SELECT … FROM reports        WHERE report_id = @rid LIMIT 1`</span>, {rid}),
+  <span class="c-fn">query</span>(<span class="c-str">`SELECT … FROM taxonomy_nodes WHERE report_id = @rid`</span>,       {rid}),
+  <span class="c-fn">query</span>(<span class="c-str">`SELECT … FROM trend_searches WHERE report_id = @rid`</span>,       {rid}),
+]);</code></pre>
+</section>
+
+<!-- ============================================================ -->
+<section id="writes">
+  <h2><span class="n">08</span> Write map — who writes what, and how</h2>
+  <p>Every BigQuery write is an <b>idempotent replace</b>: the module deletes the rows it owns for that scope, then loads fresh rows via a load job (not streaming, so deletes aren't blocked by the streaming buffer). Helper: <span class="filechip">src/common.py · load_json_rows()</span>.</p>
+  <table>
+    <tr><th>Table</th><th>Written by</th><th>Scope of replace</th><th>Trigger</th></tr>
+    <tr><td><code>reports</code></td><td><span class="filechip">extract_taxonomy.py</span></td><td><code class="inline">WHERE report_id=@rid</code></td><td>Upload (then <code class="inline">status</code> updated by map_searches)</td></tr>
+    <tr><td><code>taxonomy_nodes</code></td><td><span class="filechip">extract_taxonomy.py</span></td><td><code class="inline">WHERE report_id=@rid</code></td><td>Upload / re-extract</td></tr>
+    <tr><td><code>trend_searches</code></td><td><span class="filechip">map_searches.py</span></td><td><code class="inline">WHERE report_id=@rid</code></td><td>Pipeline step 4 or "Measure Google Trends"</td></tr>
+    <tr><td><code>megatrend_clusters</code></td><td><span class="filechip">synthesize_megatrends.py</span></td><td><code class="inline">WHERE TRUE</code> (full rebuild)</td><td>After extraction &amp; after measurement</td></tr>
+  </table>
+  <div class="note">Because writes are scoped deletes-then-loads, re-uploading the same file under the same <code class="inline">report_id</code> cleanly replaces it — no duplicates. That's exactly how the recent behaviour/psychographic quality fix was re-applied to the existing report.</div>
+</section>
+
+<!-- ============================================================ -->
+<section id="references">
+  <h2><span class="n">09</span> What the AI grounds on (references)</h2>
+  <p>The single most important property of this system: <b>the trend content is traceable to the uploaded document, not to the model's training data.</b></p>
+  <table>
+    <tr><th>AI step</th><th>What it's allowed to look at</th><th>What it may NOT do</th></tr>
+    <tr><td>Extraction (A)</td><td>Only the text of the one uploaded file (≤120k chars).</td><td>Add trends, products, or claims not present in that file.</td></tr>
+    <tr><td>Normalize/dedup (B)</td><td>Only the list of names already extracted from that file.</td><td>Introduce new items — it only merges/relabels existing ones.</td></tr>
+    <tr><td>Clustering (C)</td><td>Only the megatrend <em>names</em> + their source filenames, across reports.</td><td>Rank, score, or weight — ranking is pure arithmetic on real signals.</td></tr>
+    <tr><td>Google Trends</td><td>Real public Google search interest (US, 12 months).</td><td>n/a — not AI; a direct measurement.</td></tr>
+  </table>
+  <p>So when you see a behaviour, a product, or a megatrend in the UI, its origin is: <b>this slide deck</b> (taxonomy) plus, for products/ingredients, <b>real Google search momentum</b> layered on top. Nothing in the trend tree is model-invented.</p>
+</section>
+
+<footer>
+  TrendLens · upload-driven trend intelligence for Tyson Foods · generated from the live codebase on 2026-06-18.<br>
+  Source of truth: <span class="filechip">src/extract_taxonomy.py</span>, <span class="filechip">src/map_searches.py</span>, <span class="filechip">src/synthesize_megatrends.py</span>, <span class="filechip">scripts/setup_bigquery.py</span>, <span class="filechip">dashboard/src/app/api/*</span>.
+</footer>
+
+</main>
+</div>
+</body>
+</html>
