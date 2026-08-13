@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Outfit, Fira_Code, Fraunces } from "next/font/google";
-import { Sidebar } from "@/components/sidebar";
+import { ClientShell } from "@/components/client-shell";
 import "./globals.css";
 
 const outfit = Outfit({
@@ -13,7 +13,6 @@ const firaCode = Fira_Code({
   subsets: ["latin"],
 });
 
-// Editorial display serif for headlines — pairs with the photographic hero imagery.
 const fraunces = Fraunces({
   variable: "--font-fraunces",
   subsets: ["latin"],
@@ -32,11 +31,8 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${outfit.variable} ${firaCode.variable} ${fraunces.variable}`}>
-      <body className="antialiased bg-[#f7f6f3] text-slate-900">
-        <Sidebar />
-        <div className="ml-56 min-h-screen">
-          {children}
-        </div>
+      <body className="antialiased bg-[#FAF9F6] text-slate-900">
+        <ClientShell>{children}</ClientShell>
       </body>
     </html>
   );

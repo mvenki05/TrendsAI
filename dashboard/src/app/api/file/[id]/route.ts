@@ -18,11 +18,13 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
   }
   try {
     const rows = (await query(`
-      SELECT filename FROM \`${PROJECT_ID}.${DATASET}.reports\`
-      WHERE report_id = '${id}' LIMIT 1
-    `)) as { filename: string }[];
+      SELECT r.filename, sp.file_path AS sharepoint_path
+      FROM \`${PROJECT_ID}.${DATASET}.reports\` r
+      LEFT JOIN \`${PROJECT_ID}.${DATASET}.sharepoint_files\` sp USING (report_id)
+      WHERE r.report_id = '${id}' LIMIT 1
+    `)) as { filename: string; sharepoint_path?: string }[];
     if (!rows.length) return NextResponse.json({ error: "Unknown report" }, { status: 404 });
-    const filename = rows[0].filename;
+    const { filename, sharepoint_path } = rows[0];
     const ext = path.extname(filename).toLowerCase();
     const root = path.join(process.cwd(), "..");
     const candidates = [
@@ -31,6 +33,8 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
       path.join(root, "uploads", "mintel", filename),
       path.join(root, "uploads", "tyson", filename),
       path.join(root, "docs", filename),
+      // Original SharePoint/OneDrive path — no copy needed
+      ...(sharepoint_path ? [sharepoint_path] : []),
     ];
     for (const p of candidates) {
       try {

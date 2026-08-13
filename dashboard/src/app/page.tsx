@@ -1,158 +1,270 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Report } from "@/lib/types";
+import Image from "next/image";
 
-const STATUS_LABEL: Record<string, { text: string; cls: string }> = {
-  processing: { text: "Extracting… (~90s)", cls: "bg-amber-100 text-amber-700 border-amber-200" },
-  updating: { text: "Updating… (~90s)", cls: "bg-amber-100 text-amber-700 border-amber-200" },
-  extracted: { text: "Ready · measuring growth…", cls: "bg-sky-100 text-sky-700 border-sky-200" },
-  mapped: { text: "Ready", cls: "bg-emerald-100 text-emerald-700 border-emerald-200" },
-};
+interface HomeStats {
+  reports: number;
+  megatrends: number;
+  webFinds: number;
+  labIdeas: number;
+}
+
+const MODULES = [
+  {
+    href: "/best",
+    icon: "🏛️",
+    title: "Megatrends",
+    desc: "10 canonical trend dossiers — fully synthesized, cited, and demand-validated across all ingested sources.",
+    bar: "from-emerald-500 to-sky-500",
+    featured: true,
+    img: "protein",
+  },
+  {
+    href: "/lab",
+    icon: "🔭",
+    title: "White Space Scout",
+    desc: "Novel product ideas surfaced from the open web, anchored to real Tyson categories, novelty-gated and demand-validated.",
+    bar: "from-violet-500 to-indigo-500",
+    featured: false,
+  },
+  {
+    href: "/discover",
+    icon: "🔍",
+    title: "Web Discovery",
+    desc: "Per-megatrend web harvest — US Market Radar, emerging signals, Trends-validated.",
+    bar: "from-sky-500 to-cyan-400",
+    featured: false,
+  },
+  {
+    href: "/map",
+    icon: "🗺️",
+    title: "Trend Map",
+    desc: "Our own bottom-up megatrend → subtrend → evidence map, deck-compared.",
+    bar: "from-amber-500 to-orange-400",
+    featured: false,
+  },
+  {
+    href: "/ideas",
+    icon: "💡",
+    title: "Innovation Ideas",
+    desc: "Tyson product concepts with permission tiers and emerging recipe signals.",
+    bar: "from-rose-500 to-pink-400",
+    featured: false,
+  },
+  {
+    href: "/tyson",
+    icon: "🐔",
+    title: "Tyson Bites",
+    desc: "Cross-document themes clustered from monthly digests — corroboration scores and survey stats.",
+    bar: "from-red-600 to-rose-500",
+    featured: false,
+  },
+];
+
+const SOURCES = [
+  { href: "/mintel", icon: "📚", label: "Mintel" },
+  { href: "/hartman", icon: "🍽️", label: "Hartman" },
+  { href: "/tyson", icon: "🐔", label: "Tyson Bites" },
+  { href: "/reports", icon: "▣", label: "Reports" },
+  { href: "/methodology", icon: "🧭", label: "Methodology" },
+];
 
 export default function HomePage() {
-  const [reports, setReports] = useState<Report[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [uploading, setUploading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [info, setInfo] = useState<string | null>(null);
-  const fileRef = useRef<HTMLInputElement>(null);
-
-  const loadReports = useCallback(async () => {
-    try {
-      const data = await fetch("/api/reports").then((r) => r.json());
-      if (Array.isArray(data)) setReports(data);
-    } catch {
-      /* ignore transient */
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const [stats, setStats] = useState<HomeStats | null>(null);
 
   useEffect(() => {
-    loadReports();
-    const t = setInterval(loadReports, 5000); // poll so processing reports update
-    return () => clearInterval(t);
-  }, [loadReports]);
-
-  async function onUpload(e: React.FormEvent) {
-    e.preventDefault();
-    const file = fileRef.current?.files?.[0];
-    if (!file) return;
-    setError(null);
-    setInfo(null);
-    setUploading(true);
-    try {
-      const fd = new FormData();
-      fd.append("file", file);
-      const res = await fetch("/api/upload", { method: "POST", body: fd });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Upload failed");
-      if (fileRef.current) fileRef.current.value = "";
-      if (data.status === "updating") {
-        setInfo(`"${data.filename}" already exists — updating it in place (re-processes only if the content changed).`);
-      }
-      // Optimistic row so the user sees it immediately. Reusing the same report_id on an
-      // update replaces the existing row rather than adding a duplicate.
-      setReports((prev) => [
-        {
-          report_id: data.report_id, filename: data.filename, title: null, document_date: null, source_type: null,
-          num_megatrends: null, num_nodes: null, status: data.status || "processing",
-          uploaded_at: new Date().toISOString(),
-        },
-        ...prev.filter((r) => r.report_id !== data.report_id),
-      ]);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Upload failed");
-    } finally {
-      setUploading(false);
-    }
-  }
+    fetch("/api/methodology")
+      .then((r) => r.json())
+      .then((d) => {
+        const totalReports = Array.isArray(d.sources)
+          ? d.sources.reduce((acc: number, s: { reports: number }) => acc + Number(s.reports ?? 0), 0)
+          : 0;
+        setStats({
+          reports: totalReports,
+          megatrends: Number(d.synthesis?.dossiers ?? 0),
+          webFinds: Number(d.synthesis?.web_finds ?? 0),
+          labIdeas: Number(d.synthesis?.lab_ideas ?? 0),
+        });
+      })
+      .catch(() => {});
+  }, []);
 
   return (
-    <div className="space-y-8 p-6 lg:p-8">
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900">Reports</h1>
-        <p className="mt-1 text-sm text-slate-600">
-          Upload a report (PPTX or PDF). TrendLens extracts its megatrends → subtrends → products,
-          ingredients, behaviours &amp; psychographics, then measures what&apos;s growing in Google Trends.
-        </p>
-      </div>
+    <div className="min-h-screen">
+      {/* ── Hero banner ──────────────────────────────────────────── */}
+      <section className="relative h-[480px] overflow-hidden border-b border-slate-200">
+        {/* Full-bleed background image */}
+        <Image
+          src="/megatrends/protein.png"
+          alt="TrendLens"
+          fill
+          className="object-cover object-center"
+          sizes="100vw"
+          priority
+        />
+        {/* Dark gradient overlay — heavier on the left so text pops */}
+        <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/45 to-black/20" />
+        {/* Bottom fade to page bg */}
+        <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-[#FAF9F6] to-transparent" />
 
-      {/* Upload */}
-      <form onSubmit={onUpload} className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-        <div className="flex flex-wrap items-center gap-3">
-          <input
-            ref={fileRef}
-            type="file"
-            accept=".pptx,.pdf"
-            className="block text-sm text-slate-600 file:mr-4 file:rounded-lg file:border-0 file:bg-slate-200 file:px-4 file:py-2 file:text-sm file:font-medium file:text-slate-800 hover:file:bg-slate-300"
-          />
-          <button
-            type="submit"
-            disabled={uploading}
-            className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
-          >
-            {uploading ? "Uploading…" : "Upload & analyze"}
-          </button>
-          <span className="text-xs text-slate-500">Extraction takes ~1–2 min; Trends growth fills in after.</span>
-        </div>
-        {error && <div className="mt-3 text-sm text-rose-600">{error}</div>}
-        {info && <div className="mt-3 text-sm text-sky-600">{info}</div>}
-      </form>
-
-      {/* Reports list */}
-      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-        <div className="border-b border-slate-200 px-6 py-4">
-          <h2 className="font-semibold text-slate-900">Uploaded reports</h2>
-        </div>
-        {loading ? (
-          <div className="p-10 text-center text-slate-500">Loading…</div>
-        ) : reports.length === 0 ? (
-          <div className="p-12 text-center text-slate-500">
-            <div className="mb-2 text-3xl">▣</div>
-            No reports yet — upload a PPTX or PDF to begin.
+        {/* Text content */}
+        <div className="relative flex h-full flex-col justify-center px-12 lg:px-16">
+          <div className="mb-5 inline-flex w-fit items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-[0.22em] text-white/80 backdrop-blur-sm">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+            Tyson Foods · Innovation Intelligence
           </div>
-        ) : (
-          <div className="divide-y divide-slate-200">
-            {reports.map((r) => {
-              const status = STATUS_LABEL[r.status ?? "processing"] ?? STATUS_LABEL.processing;
-              const clickable = r.status === "mapped" || r.status === "extracted";
-              const inner = (
-                <div className="flex items-center justify-between gap-4 px-6 py-4 hover:bg-slate-50">
-                  <div className="min-w-0">
-                    <div className="flex min-w-0 items-center gap-2">
-                      <span className="truncate font-medium text-slate-900">{r.title || r.filename}</span>
-                      {r.document_date && (
-                        <span
-                          title="Date the report states about itself (coverage period or publication date)"
-                          className="shrink-0 rounded-full border border-slate-200 bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-600"
-                        >
-                          🗓 {r.document_date}
-                        </span>
-                      )}
-                    </div>
-                    <div className="mt-0.5 truncate text-xs text-slate-500">
-                      {r.filename}
-                      {r.num_megatrends != null && ` · ${r.num_megatrends} megatrends`}
-                      {` · ${new Date(r.uploaded_at).toLocaleString()}`}
-                    </div>
-                  </div>
-                  <span className={`shrink-0 rounded-full border px-2.5 py-0.5 text-xs font-medium ${status.cls}`}>
-                    {status.text}
-                  </span>
+
+          <h1 className="font-display text-[60px] font-semibold leading-[1.04] tracking-tight text-white">
+            TrendLens
+          </h1>
+
+          <p className="mt-4 max-w-[480px] text-[17px] leading-relaxed text-white/70">
+            From agency decks to real-time demand signals — synthesized into navigable intelligence for the innovation team.
+          </p>
+
+          <div className="mt-8 flex flex-wrap gap-3">
+            <Link
+              href="/best"
+              className="inline-flex items-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-semibold text-slate-900 shadow-md transition hover:bg-slate-100"
+            >
+              Explore Megatrends <span aria-hidden>→</span>
+            </Link>
+            <Link
+              href="/lab"
+              className="inline-flex items-center gap-2 rounded-xl border border-white/30 bg-white/10 px-5 py-3 text-sm font-semibold text-white backdrop-blur-sm transition hover:bg-white/20"
+            >
+              White Space Scout <span aria-hidden>→</span>
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Stats strip ──────────────────────────────────────────── */}
+      {stats && (
+        <section className="border-b border-slate-200 bg-white/70 px-8 py-5">
+          <div className="mx-auto flex max-w-6xl items-stretch divide-x divide-slate-200">
+            {[
+              { value: stats.reports, label: "Reports ingested" },
+              { value: stats.megatrends, label: "Megatrends tracked" },
+              { value: stats.webFinds, label: "Web signals harvested" },
+              { value: stats.labIdeas, label: "White-space ideas" },
+            ].map(({ value, label }) => (
+              <div key={label} className="flex flex-col justify-center px-8 first:pl-0 last:pr-0">
+                <div className="text-[26px] font-bold tabular-nums text-slate-900">{value}</div>
+                <div className="mt-0.5 text-[11.5px] text-slate-500">{label}</div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* ── Feature cards ────────────────────────────────────────── */}
+      <section className="px-8 py-10">
+        <div className="mx-auto max-w-6xl">
+          <p className="mb-7 text-[11px] font-bold uppercase tracking-[0.22em] text-slate-400">
+            Explore
+          </p>
+
+          {/* Featured row: Megatrends (large) + White Space */}
+          <div className="mb-4 grid grid-cols-3 gap-4">
+            {/* Megatrends — spans 2 cols, image-backed */}
+            <Link
+              href="/best"
+              className="group relative col-span-2 flex min-h-[220px] flex-col overflow-hidden rounded-2xl shadow-sm transition hover:shadow-lg hover:-translate-y-0.5"
+            >
+              <Image
+                src="/megatrends/protein.png"
+                alt="Megatrends"
+                fill
+                className="object-cover transition duration-500 group-hover:scale-105"
+                sizes="(max-width: 768px) 100vw, 66vw"
+              />
+              <div className="absolute inset-0 bg-gradient-to-br from-black/70 via-black/40 to-black/20" />
+              <div className="relative flex flex-1 flex-col justify-between p-7">
+                <div>
+                  <span className="text-2xl">🏛️</span>
+                  <h3 className="mt-3 font-display text-2xl font-semibold text-white">
+                    Megatrends
+                  </h3>
+                  <p className="mt-2 max-w-xs text-[13.5px] leading-relaxed text-white/75">
+                    10 canonical trend dossiers — fully synthesized, cited, and demand-validated across all ingested sources.
+                  </p>
                 </div>
-              );
-              return clickable ? (
-                <Link key={r.report_id} href={`/report/${r.report_id}`}>{inner}</Link>
-              ) : (
-                <div key={r.report_id} className="opacity-70">{inner}</div>
-              );
-            })}
+                <div className="mt-6 inline-flex items-center gap-1.5 text-[12px] font-semibold text-white/80 transition group-hover:text-white">
+                  Open dossiers <span aria-hidden>→</span>
+                </div>
+              </div>
+            </Link>
+
+            {/* White Space */}
+            <Link
+              href="/lab"
+              className="group relative flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:shadow-md hover:-translate-y-0.5"
+            >
+              <div className="h-1.5 w-full bg-gradient-to-r from-violet-500 to-indigo-500" />
+              <div className="flex flex-1 flex-col p-6">
+                <span className="text-2xl">🔭</span>
+                <h3 className="mt-3 font-display text-[18px] font-semibold text-slate-900">
+                  White Space Scout
+                </h3>
+                <p className="mt-2 text-[13px] leading-relaxed text-slate-500">
+                  Novel product ideas surfaced from the open web, anchored to real Tyson categories, novelty-gated and demand-validated.
+                </p>
+                <div className="mt-auto pt-5 text-[12px] font-semibold text-slate-400 transition group-hover:text-slate-700">
+                  Explore ideas →
+                </div>
+              </div>
+            </Link>
           </div>
-        )}
-      </div>
+
+          {/* Secondary row: 4 equal cards */}
+          <div className="grid grid-cols-4 gap-4">
+            {[
+              { href: "/discover", icon: "🔍", title: "Web Discovery", desc: "Per-megatrend web harvest — US Market Radar, Trends-validated.", bar: "from-sky-500 to-cyan-400" },
+              { href: "/map", icon: "🗺️", title: "Trend Map", desc: "Bottom-up megatrend → subtrend → evidence map, deck-compared.", bar: "from-amber-500 to-orange-400" },
+              { href: "/ideas", icon: "💡", title: "Innovation Ideas", desc: "Tyson product concepts with permission tiers and emerging recipes.", bar: "from-rose-500 to-pink-400" },
+              { href: "/tyson", icon: "🐔", title: "Tyson Bites", desc: "Cross-digest themes with corroboration scores and survey stats.", bar: "from-red-600 to-rose-500" },
+            ].map((m) => (
+              <Link
+                key={m.href}
+                href={m.href}
+                className="group flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:shadow-md hover:-translate-y-0.5"
+              >
+                <div className={`h-1 w-full bg-gradient-to-r ${m.bar}`} />
+                <div className="flex flex-1 flex-col p-5">
+                  <span className="text-xl">{m.icon}</span>
+                  <h3 className="mt-2.5 font-display text-[15px] font-semibold text-slate-900">{m.title}</h3>
+                  <p className="mt-1.5 text-[12px] leading-relaxed text-slate-500">{m.desc}</p>
+                  <div className="mt-auto pt-4 text-[11.5px] font-semibold text-slate-400 transition group-hover:text-slate-700">
+                    Open →
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Sources bar ──────────────────────────────────────────── */}
+      <section className="border-t border-slate-200 px-8 py-6">
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-3">
+          <span className="mr-2 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">
+            Source libraries
+          </span>
+          {SOURCES.map(({ href, icon, label }) => (
+            <Link
+              key={href}
+              href={href}
+              className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-[12px] font-medium text-slate-600 shadow-sm transition hover:bg-slate-50 hover:text-slate-900"
+            >
+              <span>{icon}</span>
+              {label}
+            </Link>
+          ))}
+        </div>
+      </section>
     </div>
   );
 }

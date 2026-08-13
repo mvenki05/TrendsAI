@@ -92,7 +92,7 @@ const STEPS = [
   {
     n: 5,
     title: "Synthesize",
-    subtitle: "The Megatrend Codex",
+    subtitle: "Megatrends",
     color: "bg-rose-600",
     ring: "ring-rose-200",
     accent: "text-rose-600",
@@ -161,7 +161,7 @@ export default function MethodologyPage() {
             <StatTile value={totalReports ?? "—"} label="Source reports" sub="across 4 providers" />
             <StatTile value={totalNodes ?? "—"} label="Extracted items" sub="products, trends, behaviours" />
             <StatTile value={stats.measures.measured_terms} label="Terms measured" sub="via Google Trends" />
-            <StatTile value={stats.synthesis.dossiers} label="Codex dossiers" sub="canonical megatrends" />
+            <StatTile value={stats.synthesis.dossiers} label="Megatrend dossiers" sub="canonical megatrends" />
           </div>
         )}
       </div>
@@ -367,7 +367,7 @@ export default function MethodologyPage() {
             </p>
             {stats && (
               <div className="mt-2 inline-flex items-center gap-2 rounded-lg bg-rose-100 px-3 py-1.5 text-[13px] font-bold text-rose-700">
-                {stats.synthesis.dossiers} Codex dossiers published
+                {stats.synthesis.dossiers} Megatrend dossiers published
               </div>
             )}
           </StepCard>
@@ -404,7 +404,7 @@ export default function MethodologyPage() {
       {/* ── What's in a dossier ──────────────────────────────────────── */}
       <div>
         <div className="mb-2 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">The output</div>
-        <h2 className="text-2xl font-extrabold tracking-tight text-slate-900">What&apos;s inside a Codex dossier</h2>
+        <h2 className="text-2xl font-extrabold tracking-tight text-slate-900">What&apos;s inside a Megatrend dossier</h2>
         <p className="mt-1 text-[14px] text-slate-500">Each of the ten canonical megatrends gets all of the following, fully cited.</p>
         <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {DOSSIER_SECTIONS.map(({ icon, title, desc }) => (
@@ -431,7 +431,7 @@ export default function MethodologyPage() {
             ["Unmodified originals", "Source files are stored exactly as received and are always openable from citations."],
             ["Transparent scoring", "Strength scores are computed from objective counts — evidence classes, report counts, months seen — not editorial judgment."],
             ["No brand inflation", "Tyson product opportunities are anchored to the real SKU catalog. Whitespace claims only land where there's actual portfolio capacity."],
-            ["No stale synthesis", "After any new report is ingested, the Codex dossiers are rebuilt to incorporate it — the system doesn't drift from its source material."],
+            ["No stale synthesis", "After any new report is ingested, the Megatrend dossiers are rebuilt to incorporate it — the system doesn't drift from its source material."],
           ].map(([title, desc]) => (
             <div key={title} className="flex gap-3 rounded-xl bg-white/5 px-4 py-3">
               <span className="mt-0.5 shrink-0 font-extrabold text-emerald-400">✓</span>

@@ -363,7 +363,7 @@ export function PresentMode({ dossier, imageSrc, rank, total, onClose }: {
         ✕ Exit
       </button>
       <div className="absolute left-6 top-6 z-20 text-[11px] font-bold uppercase tracking-[0.25em] text-white/40">
-        TrendLens · Megatrend Codex{rank ? ` · № ${rank}${total ? ` of ${total}` : ""}` : ""}
+        TrendLens · Megatrends
       </div>
       <div className="absolute bottom-5 left-6 z-20 text-[12px] font-bold tabular-nums text-white/40">
         {active + 1} / {slideCount}
