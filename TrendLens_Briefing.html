@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>TrendLens — System Briefing</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Playfair+Display:wght@700;800&display=swap');
+
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --ink:#0f0f0f;
+  --cream:#FAFAF8;
+  --white:#ffffff;
+  --muted:#6b7280;
+  --border:#e5e7eb;
+  --soft:#f3f4f6;
+  --red:#dc2626; --red-light:#fef2f2; --red-mid:#fca5a5;
+  --amber:#d97706; --amber-light:#fffbeb; --amber-mid:#fde68a;
+  --emerald:#059669; --emerald-light:#f0fdf4; --emerald-mid:#6ee7b7;
+  --sky:#0284c7; --sky-light:#f0f9ff; --sky-mid:#7dd3fc;
+  --indigo:#4338ca; --indigo-light:#eef2ff; --indigo-mid:#a5b4fc;
+  --violet:#7c3aed; --violet-light:#f5f3ff; --violet-mid:#c4b5fd;
+  --orange:#ea580c; --orange-light:#fff7ed;
+  --teal:#0d9488; --teal-light:#f0fdfa;
+  --green:#16a34a;
+  --purple:#9333ea;
+}
+html{scroll-behavior:smooth;}
+body{
+  font-family:'Inter',system-ui,sans-serif;
+  background:var(--cream);
+  color:var(--ink);
+  font-size:15px;
+  line-height:1.65;
+}
+
+/* ─── HERO ─── */
+.hero{
+  background:var(--ink);
+  color:#fff;
+  padding:80px 0 72px;
+  position:relative;
+  overflow:hidden;
+}
+.hero::before{
+  content:'';
+  position:absolute;inset:0;
+  background:radial-gradient(ellipse 80% 60% at 70% 50%, rgba(99,102,241,.25) 0%, transparent 70%),
+             radial-gradient(ellipse 50% 40% at 20% 80%, rgba(245,158,11,.15) 0%, transparent 60%);
+}
+.hero-inner{max-width:1000px;margin:0 auto;padding:0 48px;position:relative;}
+.hero-eyebrow{
+  display:inline-flex;align-items:center;gap:8px;
+  background:rgba(255,255,255,.1);
+  border:1px solid rgba(255,255,255,.15);
+  border-radius:99px;
+  padding:5px 14px;
+  font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
+  color:rgba(255,255,255,.8);
+  margin-bottom:28px;
+}
+.hero h1{
+  font-family:'Playfair Display',Georgia,serif;
+  font-size:68px;font-weight:800;
+  letter-spacing:-.03em;line-height:1;
+  margin-bottom:20px;
+}
+.hero h1 span{
+  background:linear-gradient(135deg,#fb923c,#f472b6,#a78bfa);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;
+}
+.hero-sub{
+  font-size:18px;color:rgba(255,255,255,.7);
+  max-width:580px;line-height:1.7;margin-bottom:40px;
+}
+.hero-stats{display:flex;gap:40px;flex-wrap:wrap;}
+.hero-stat .label{font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.45);margin-bottom:4px;}
+.hero-stat .value{font-size:17px;font-weight:700;color:#fff;}
+
+/* ─── LAYOUT ─── */
+.page{max-width:1000px;margin:0 auto;padding:64px 48px;}
+section{margin-bottom:72px;}
+.section-label{
+  display:inline-flex;align-items:center;gap:8px;
+  font-size:11px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--muted);margin-bottom:10px;
+}
+.section-label::before{content:'';display:block;width:20px;height:2px;background:currentColor;border-radius:1px;}
+h2{font-family:'Playfair Display',Georgia,serif;font-size:36px;font-weight:700;letter-spacing:-.02em;line-height:1.15;margin-bottom:10px;}
+h3{font-size:17px;font-weight:700;letter-spacing:-.01em;margin-bottom:6px;}
+h4{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.14em;color:var(--muted);margin-bottom:8px;}
+p{color:#374151;margin-bottom:10px;}
+p:last-child{margin-bottom:0;}
+
+/* ─── CARDS ─── */
+.card{
+  background:var(--white);
+  border:1px solid var(--border);
+  border-radius:20px;
+  padding:28px;
+  margin-bottom:16px;
+}
+.card-sm{padding:20px;border-radius:16px;}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;}
+.card-accent-top{border-top:3px solid;}
+
+/* ─── PIPELINE ─── */
+.pipeline{
+  display:flex;
+  border:1px solid var(--border);
+  border-radius:20px;
+  overflow:hidden;
+  background:var(--white);
+  margin:24px 0;
+}
+.step{flex:1;padding:22px 18px;border-right:1px solid var(--border);position:relative;}
+.step:last-child{border-right:none;}
+.step-dot{
+  width:32px;height:32px;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:13px;font-weight:800;color:#fff;
+  margin-bottom:10px;
+}
+.step-title{font-size:13px;font-weight:700;margin-bottom:4px;}
+.step-desc{font-size:12px;color:var(--muted);line-height:1.45;}
+
+/* ─── SOURCE PILLS ─── */
+.pill{
+  display:inline-flex;align-items:center;gap:6px;
+  border-radius:10px;padding:9px 16px;
+  font-size:13px;font-weight:600;
+  margin:6px 6px 6px 0;
+  border:1px solid;
+}
+
+/* ─── BADGE ─── */
+.badge{
+  display:inline-block;
+  font-size:10px;font-weight:700;
+  padding:3px 9px;border-radius:99px;
+  letter-spacing:.05em;
+}
+.badge-core{background:#dcfce7;color:#14532d;}
+.badge-adj{background:#dbeafe;color:#1e3a8a;}
+.badge-str{background:#ffedd5;color:#7c2d12;}
+.badge-gap{background:#e0e7ff;color:#312e81;}
+.badge-strong{background:#dcfce7;color:#14532d;}
+.badge-mod{background:#fef3c7;color:#78350f;}
+
+/* ─── MEGATREND TABLE ─── */
+.mt-grid{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid var(--border);border-radius:20px;overflow:hidden;}
+.mt-item{
+  padding:18px 20px;
+  border-bottom:1px solid var(--border);
+  border-right:1px solid var(--border);
+  display:flex;align-items:center;gap:14px;
+  background:var(--white);
+  transition:background .15s;
+}
+.mt-item:nth-child(even){border-right:none;}
+.mt-item:nth-last-child(-n+2){border-bottom:none;}
+.mt-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.mt-name{font-size:14px;font-weight:700;line-height:1.2;}
+.mt-tagline{font-size:12px;color:var(--muted);margin-top:2px;}
+
+/* ─── DOSSIER SECTIONS ─── */
+.dossier-block{
+  display:flex;gap:24px;
+  padding:28px 0;
+  border-bottom:1px solid var(--border);
+  align-items:flex-start;
+}
+.dossier-block:last-child{border-bottom:none;padding-bottom:0;}
+.sec-num{
+  font-family:'Playfair Display',Georgia,serif;
+  font-size:56px;font-weight:700;
+  color:var(--border);line-height:1;
+  min-width:56px;
+}
+.sec-body{flex:1;}
+
+/* ─── TYSON PANELS ─── */
+.tyson-panel{
+  border-radius:16px;
+  padding:22px;
+  margin-bottom:14px;
+  border:1px solid;
+}
+.tp-amber{background:var(--amber-light);border-color:#fcd34d;}
+.tp-emerald{background:var(--emerald-light);border-color:#a7f3d0;}
+.tp-indigo{background:var(--indigo-light);border-color:#c7d2fe;}
+.tp-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.14em;margin-bottom:6px;}
+.tp-title-amber{color:var(--amber);}
+.tp-title-emerald{color:var(--emerald);}
+.tp-title-indigo{color:var(--indigo);}
+.panel-inner{
+  border-radius:12px;padding:16px;margin-top:12px;
+  border:1px solid;font-size:13px;
+}
+.pi-blue{background:var(--indigo-light);border-color:var(--indigo-mid);}
+.pi-violet{background:var(--violet-light);border-color:var(--violet-mid);}
+
+/* ─── HIGHLIGHT BOX ─── */
+.highlight{
+  background:var(--ink);color:#fff;
+  border-radius:24px;padding:40px;
+  margin:28px 0;
+  position:relative;overflow:hidden;
+}
+.highlight::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse 60% 60% at 90% 10%,rgba(99,102,241,.3) 0%,transparent 60%),
+             radial-gradient(ellipse 40% 40% at 10% 90%,rgba(245,158,11,.2) 0%,transparent 60%);
+}
+.highlight-inner{position:relative;}
+.highlight h3{
+  font-family:'Playfair Display',serif;
+  font-size:26px;font-weight:700;color:#fff;
+  margin-bottom:6px;
+}
+.highlight p{color:rgba(255,255,255,.65);}
+
+/* ─── CALLOUT ─── */
+.callout{
+  border-radius:16px;
+  padding:18px 22px;
+  margin:20px 0;
+  display:flex;gap:14px;align-items:flex-start;
+}
+.callout-icon{font-size:20px;margin-top:1px;flex-shrink:0;}
+.callout-amber{background:var(--amber-light);border:1px solid #fcd34d;}
+.callout-sky{background:var(--sky-light);border:1px solid var(--sky-mid);}
+.callout-emerald{background:var(--emerald-light);border:1px solid var(--emerald-mid);}
+.callout-violet{background:var(--violet-light);border:1px solid var(--violet-mid);}
+.callout strong{color:var(--ink);}
+.callout p{color:#374151;margin-bottom:0;}
+
+/* ─── DIVIDER ─── */
+hr{border:none;border-top:1px solid var(--border);margin:64px 0;}
+
+/* ─── CITE DEMO ─── */
+.cite-chip{
+  display:inline-flex;align-items:center;gap:6px;
+  background:var(--soft);border:1px solid var(--border);
+  border-radius:8px;padding:5px 12px;
+  font-size:12px;font-weight:500;margin:4px 4px 4px 0;
+}
+.cite-chip .num{font-weight:800;color:var(--sky);font-size:11px;}
+
+/* ─── PAGE LIST ─── */
+.page-list{background:var(--white);border:1px solid var(--border);border-radius:20px;overflow:hidden;}
+.page-item{
+  display:flex;align-items:flex-start;gap:16px;
+  padding:18px 24px;
+  border-bottom:1px solid var(--border);
+  transition:background .12s;
+}
+.page-item:last-child{border-bottom:none;}
+.page-item:hover{background:var(--soft);}
+.page-item.featured{background:linear-gradient(90deg,#f0f9ff,var(--white));}
+.route-chip{
+  font-size:12px;font-weight:700;
+  font-family:'SF Mono','Fira Code',monospace;
+  background:var(--soft);border:1px solid var(--border);
+  padding:4px 10px;border-radius:7px;
+  white-space:nowrap;flex-shrink:0;
+  margin-top:2px;
+}
+.page-item.featured .route-chip{background:var(--sky-light);border-color:var(--sky-mid);color:var(--sky);}
+
+/* ─── TIER COMPARISON ─── */
+.tier-row{
+  display:flex;gap:12px;align-items:flex-start;
+  padding:16px 0;border-bottom:1px solid var(--border);
+}
+.tier-row:last-child{border-bottom:none;}
+.tier-badge-lg{
+  padding:6px 14px;border-radius:99px;
+  font-size:12px;font-weight:700;
+  white-space:nowrap;flex-shrink:0;margin-top:2px;
+}
+
+/* ─── FOOTER ─── */
+.footer{
+  border-top:1px solid var(--border);
+  padding:28px 0 0;
+  display:flex;justify-content:space-between;align-items:center;
+  color:var(--muted);font-size:13px;
+}
+.footer strong{color:var(--ink);}
+
+/* ─── RESPONSIVE ─── */
+@media(max-width:720px){
+  .hero h1{font-size:42px;}
+  .hero-inner,.page{padding-left:24px;padding-right:24px;}
+  .grid-2,.grid-3{grid-template-columns:1fr;}
+  .mt-grid{grid-template-columns:1fr;}
+  .mt-item:nth-child(odd){border-right:none;}
+  .mt-item:nth-last-child(-n+2){border-bottom:1px solid var(--border);}
+  .mt-item:last-child{border-bottom:none;}
+}
+</style>
+</head>
+<body>
+
+<!-- ══════════ HERO ══════════ -->
+<div class="hero">
+  <div class="hero-inner">
+    <div class="hero-eyebrow">
+      <span>★</span> Tyson Foods Innovation Intelligence
+    </div>
+    <h1>Trend<span>Lens</span></h1>
+    <p class="hero-sub">
+      A trend intelligence platform that turns agency decks, Mintel reports, and Tyson's own monthly digests
+      into fully-cited, navigable strategy — with every claim traceable to its source.
+    </p>
+    <div class="hero-stats">
+      <div class="hero-stat">
+        <div class="label">Megatrends</div>
+        <div class="value">10 canonical dossiers</div>
+      </div>
+      <div class="hero-stat">
+        <div class="label">Tyson SKUs</div>
+        <div class="value">~6,300 from Salsify</div>
+      </div>
+      <div class="hero-stat">
+        <div class="label">Stack</div>
+        <div class="value">Next.js · BigQuery · Claude Opus</div>
+      </div>
+      <div class="hero-stat">
+        <div class="label">Capstone</div>
+        <div class="value">Megatrend Codex</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="page">
+
+<!-- ══════════ 01 WHAT IT DOES ══════════ -->
+<section>
+  <div class="section-label">01 — Overview</div>
+  <h2>What TrendLens does</h2>
+  <p style="max-width:640px;font-size:16px;color:#4b5563;margin-bottom:32px;">
+    The innovation team receives trend reports from multiple agencies every month. TrendLens ingests all of them,
+    measures real consumer demand via Google Trends, harvests the open web, and synthesises everything into one
+    navigable system — so no insight gets buried in a PDF nobody re-reads.
+  </p>
+
+  <div class="pipeline">
+    <div class="step">
+      <div class="step-dot" style="background:#6366f1;">01</div>
+      <div class="step-title">Ingest</div>
+      <div class="step-desc">PDFs & PPTX decks uploaded via the dashboard</div>
+    </div>
+    <div class="step">
+      <div class="step-dot" style="background:#8b5cf6;">02</div>
+      <div class="step-title">Extract</div>
+      <div class="step-desc">Claude reads each doc, outputs a taxonomy tree of trends & insights</div>
+    </div>
+    <div class="step">
+      <div class="step-dot" style="background:#ec4899;">03</div>
+      <div class="step-title">Validate</div>
+      <div class="step-desc">Google Trends measures real consumer demand for every signal</div>
+    </div>
+    <div class="step">
+      <div class="step-dot" style="background:#f59e0b;">04</div>
+      <div class="step-title">Corroborate</div>
+      <div class="step-desc">Web harvest cross-checks claims across the open internet</div>
+    </div>
+    <div class="step">
+      <div class="step-dot" style="background:#10b981;">05</div>
+      <div class="step-title">Synthesise</div>
+      <div class="step-desc">Cross-document themes clustered by megatrend</div>
+    </div>
+    <div class="step">
+      <div class="step-dot" style="background:#0284c7;">06</div>
+      <div class="step-title">Cite</div>
+      <div class="step-desc">Every claim linked to its source — page-level deep links</div>
+    </div>
+  </div>
+
+  <div class="callout callout-sky">
+    <div class="callout-icon">🔗</div>
+    <div>
+      <strong>Everything is traceable.</strong>
+      <p>Any claim in TrendLens resolves to a specific page in a specific report, or to a specific external URL.
+      When you present a stat to leadership, you can open the original source in one click.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ 02 DATA SOURCES ══════════ -->
+<section>
+  <div class="section-label">02 — Data Sources</div>
+  <h2>What goes in</h2>
+  <p style="margin-bottom:24px;font-size:16px;color:#4b5563;">Four types of sources, all stored in Google BigQuery.</p>
+  <div class="grid-2">
+    <div class="card card-sm" style="border-top:3px solid #6366f1;">
+      <span class="pill" style="background:#eef2ff;border-color:#c7d2fe;color:#4338ca;">📊 Agency decks</span>
+      <p>PPTX and PDF trend reports from external agencies. Uploaded manually through the dashboard and extracted into taxonomy trees.</p>
+    </div>
+    <div class="card card-sm" style="border-top:3px solid #0284c7;">
+      <span class="pill" style="background:var(--sky-light);border-color:var(--sky-mid);color:var(--sky);">📘 Mintel reports</span>
+      <p>Downloaded from the Mintel portal, tagged so Mintel-specific insights can be surfaced separately on their own page.</p>
+    </div>
+    <div class="card card-sm" style="border-top:3px solid #059669;">
+      <span class="pill" style="background:var(--emerald-light);border-color:var(--emerald-mid);color:#065f46;">🟢 Tyson monthly digests</span>
+      <p>Tyson's own internal trend insight cards. Cross-document themes are clustered from these and shown on the Tyson Bites page.</p>
+    </div>
+    <div class="card card-sm" style="border-top:3px solid #d97706;">
+      <span class="pill" style="background:var(--amber-light);border-color:var(--amber-mid);color:#92400e;">🌐 Web harvest</span>
+      <p>Open internet — news articles, brand launches, food blogs. Harvested per megatrend to validate signals exist outside agency reports.</p>
+    </div>
+  </div>
+  <div class="card" style="margin-top:4px;border-top:3px solid #0f0f0f;">
+    <h4>Also in BigQuery</h4>
+    <div class="grid-2" style="gap:20px;">
+      <div>
+        <h3 style="font-size:14px;">tyson_products_enriched</h3>
+        <p style="font-size:13px;">~6,300 Tyson SKUs from Salsify with clean consumer-facing product names, category/segment, and full ingredient lists. Used to surface "what Tyson already makes" against each megatrend.</p>
+      </div>
+      <div>
+        <h3 style="font-size:14px;">Google Trends (Playwright scraping)</h3>
+        <p style="font-size:13px;">Real-browser scraping measures year-over-year demand for every trend term. No API key required — runs locally against the real Google Trends interface.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr/>
+
+<!-- ══════════ 03 PAGES ══════════ -->
+<section>
+  <div class="section-label">03 — The Dashboard</div>
+  <h2>All pages</h2>
+  <p style="margin-bottom:24px;font-size:16px;color:#4b5563;">All live at <strong>localhost:3000</strong> — built in Next.js 16 + Tailwind CSS.</p>
+  <div class="page-list">
+    <div class="page-item">
+      <span class="route-chip">/</span>
+      <div><strong>Reports</strong> — Upload PDFs and PPTX. Lists all extracted reports with their taxonomy trees.</div>
+    </div>
+    <div class="page-item">
+      <span class="route-chip">/report/[id]</span>
+      <div><strong>Report Detail</strong> — One report's extracted taxonomy tree + Google Trends demand charts for each signal.</div>
+    </div>
+    <div class="page-item featured">
+      <span class="route-chip">/best</span>
+      <div>
+        <strong>Megatrend Codex ★</strong> — The capstone. 10 fully-cited megatrend dossiers synthesised from every source.
+        <em style="color:var(--sky);"> Main focus of this briefing.</em>
+      </div>
+    </div>
+    <div class="page-item">
+      <span class="route-chip">/discover</span>
+      <div><strong>Web Discovery</strong> — Per-megatrend web finds + US Market Radar, all Google-Trends validated.</div>
+    </div>
+    <div class="page-item">
+      <span class="route-chip">/ideas</span>
+      <div><strong>Innovation Ideas</strong> — Tyson product concepts scored by permission tier (Core / Adjacent / Stretch) + emerging recipes.</div>
+    </div>
+    <div class="page-item">
+      <span class="route-chip">/lab</span>
+      <div><strong>White Space Scout</strong> — Internet-found product ideas, novelty-gated, category-anchored to real Tyson SKUs, demand-validated. Idea first, Tyson angle as context — no brand names up front.</div>
+    </div>
+    <div class="page-item">
+      <span class="route-chip">/map</span>
+      <div><strong>Trend Map</strong> — Our own bottom-up megatrend → subtrend → evidence map built from the web harvest.</div>
+    </div>
+    <div class="page-item">
+      <span class="route-chip">/mintel</span>
+      <div><strong>Mintel Intelligence</strong> — All Mintel-tagged reports as taxonomy trees in one view.</div>
+    </div>
+    <div class="page-item">
+      <span class="route-chip">/tyson</span>
+      <div><strong>Tyson Bites — Combined Insights</strong> — Cross-document themes from the monthly digests, clustered by recurrence. Survey stats + "How might Tyson…?" question banks.</div>
+    </div>
+    <div class="page-item">
+      <span class="route-chip">/methodology</span>
+      <div><strong>Methodology</strong> — Trust page explaining all 6 pipeline steps with live source counts and freshness stats.</div>
+    </div>
+  </div>
+</section>
+
+<hr/>
+
+<!-- ══════════ 04 MEGATREND CODEX ══════════ -->
+<section>
+  <div class="section-label">04 — Deep Dive</div>
+  <h2>The Megatrend Codex <span style="color:var(--muted);font-weight:400;font-size:22px;">/best</span></h2>
+  <p style="font-size:16px;color:#4b5563;max-width:640px;margin-bottom:32px;">
+    The capstone of the whole system. One fully-cited dossier per canonical megatrend —
+    built from everything TrendLens knows: uploaded reports, web harvest, Google Trends, and Tyson's own product catalog.
+  </p>
+
+  <!-- 10 Megatrends -->
+  <div class="highlight">
+    <div class="highlight-inner">
+      <h3>10 Canonical Megatrends</h3>
+      <p style="margin-bottom:24px;">The strategic lenses the system organises all trend intelligence around:</p>
+      <div class="mt-grid" style="border:1px solid rgba(255,255,255,.1);border-radius:16px;overflow:hidden;">
+        <div class="mt-item" style="background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.08);">
+          <div class="mt-dot" style="background:#ef4444;"></div>
+          <div><div class="mt-name" style="color:#fff;">The Protein Era</div><div class="mt-tagline">High-protein positioning across every format</div></div>
+        </div>
+        <div class="mt-item" style="background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.08);">
+          <div class="mt-dot" style="background:#22c55e;"></div>
+          <div><div class="mt-name" style="color:#fff;">Conscious Food Systems</div><div class="mt-tagline">Sustainability, plant-adjacent, regenerative</div></div>
+        </div>
+        <div class="mt-item" style="background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.08);">
+          <div class="mt-dot" style="background:#f59e0b;"></div>
+          <div><div class="mt-name" style="color:#fff;">The Value Recalibration</div><div class="mt-tagline">Bifurcated budgets, trading up and down simultaneously</div></div>
+        </div>
+        <div class="mt-item" style="background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.08);">
+          <div class="mt-dot" style="background:#84cc16;"></div>
+          <div><div class="mt-name" style="color:#fff;">Functional Everything</div><div class="mt-tagline">Food as medicine, functional claims in every aisle</div></div>
+        </div>
+        <div class="mt-item" style="background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.08);">
+          <div class="mt-dot" style="background:#6366f1;"></div>
+          <div><div class="mt-name" style="color:#fff;">The Feed Is the Menu</div><div class="mt-tagline">Social media as the discovery engine for food</div></div>
+        </div>
+        <div class="mt-item" style="background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.08);">
+          <div class="mt-dot" style="background:#f97316;"></div>
+          <div><div class="mt-name" style="color:#fff;">Flavour &amp; Texture</div><div class="mt-tagline">Global flavours, bold heat, texture-as-experience</div></div>
+        </div>
+        <div class="mt-item" style="background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.08);">
+          <div class="mt-dot" style="background:#10b981;"></div>
+          <div><div class="mt-name" style="color:#fff;">Trust &amp; Transparency</div><div class="mt-tagline">Clean label, ingredient scrutiny, brand accountability</div></div>
+        </div>
+        <div class="mt-item" style="background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.08);">
+          <div class="mt-dot" style="background:#0ea5e9;"></div>
+          <div><div class="mt-name" style="color:#fff;">Meals Unbound</div><div class="mt-tagline">Snacking replacing meals, daypart boundaries dissolving</div></div>
+        </div>
+        <div class="mt-item" style="background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.08);">
+          <div class="mt-dot" style="background:#14b8a6;"></div>
+          <div><div class="mt-name" style="color:#fff;">Effortless Eating</div><div class="mt-tagline">Convenience without compromise on quality</div></div>
+        </div>
+        <div class="mt-item" style="background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.08);">
+          <div class="mt-dot" style="background:#a855f7;"></div>
+          <div><div class="mt-name" style="color:#fff;">The GLP-1 Era</div><div class="mt-tagline">GLP-1 drugs reshaping food demand and portion norms</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sidebar -->
+  <div class="card" style="margin-top:12px;">
+    <h4>Navigation</h4>
+    <h3>The left sidebar</h3>
+    <p>Shows all 10 megatrends as image cards. Clicking a card loads its full dossier. The active megatrend reveals section jump links directly underneath — <em>What's happening now, Horizons, Subtrends, Key Stats, Tyson Layer, Sources</em> — so you can jump to any section without scrolling. Switching megatrends automatically scrolls the page back to the top.</p>
+  </div>
+
+  <!-- 7 Dossier Sections -->
+  <div class="card" style="margin-top:16px;">
+    <h4>Dossier Structure</h4>
+    <h3 style="margin-bottom:24px;">7 sections per megatrend</h3>
+
+    <div class="dossier-block">
+      <div class="sec-num">01</div>
+      <div class="sec-body">
+        <h3>Definition &amp; Why it matters to Tyson</h3>
+        <p>A cited definition of the megatrend — what it is, where it came from, and exactly why it is strategically relevant to Tyson's portfolio. Every sentence links back to its source document or external URL.</p>
+      </div>
+    </div>
+
+    <div class="dossier-block">
+      <div class="sec-num">02</div>
+      <div class="sec-body">
+        <h3>What's Happening Now</h3>
+        <p>A narrative summary of current market movement — what's actually shifting right now. Cited sentence by sentence from the most recent reports and web finds.</p>
+      </div>
+    </div>
+
+    <div class="dossier-block">
+      <div class="sec-num">03</div>
+      <div class="sec-body">
+        <h3>Horizons — Now / Next / Later</h3>
+        <p>Three time columns showing where this trend is heading. Each item has a title, detail, and a rationale for why it belongs in that specific horizon — all cited.</p>
+        <div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap;">
+          <div style="background:var(--emerald-light);border:1px solid var(--emerald-mid);border-radius:10px;padding:10px 16px;font-size:12px;font-weight:600;color:#065f46;">Now — 0 to 12 months</div>
+          <div style="background:var(--sky-light);border:1px solid var(--sky-mid);border-radius:10px;padding:10px 16px;font-size:12px;font-weight:600;color:#075985;">Next — 1 to 3 years</div>
+          <div style="background:var(--violet-light);border:1px solid var(--violet-mid);border-radius:10px;padding:10px 16px;font-size:12px;font-weight:600;color:#5b21b6;">Later — 3 to 5+ years</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="dossier-block">
+      <div class="sec-num">04</div>
+      <div class="sec-body">
+        <h3>Subtrends</h3>
+        <p>The megatrend broken into its constituent sub-signals. Each subtrend card contains:</p>
+        <ul style="margin:10px 0 12px 18px;color:#374151;font-size:14px;line-height:2;">
+          <li><strong>Evidence</strong> — ranked Primary / Secondary, each with a citation</li>
+          <li><strong>Consumer psychology</strong> — why people behave this way</li>
+          <li><strong>Behavioural signals</strong> — what people actually do</li>
+          <li><strong>Opportunities</strong> — specific Tyson product concepts with Tyson fit analysis</li>
+        </ul>
+        <div class="callout callout-violet" style="margin:0;">
+          <div class="callout-icon">💡</div>
+          <div>
+            <strong>Opportunities inside subtrends</strong> are Tyson-specific product concepts scoped to existing manufacturing capability, each scored Core / Adjacent / Stretch.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="dossier-block">
+      <div class="sec-num">05</div>
+      <div class="sec-body">
+        <h3>Key Statistics</h3>
+        <p>Hard numbers — market sizes, growth rates, consumer survey results — that validate the trend's strength. Every stat has a clickable citation opening the original document at the exact page.</p>
+      </div>
+    </div>
+
+    <div class="dossier-block">
+      <div class="sec-num">06</div>
+      <div class="sec-body">
+        <h3>The Tyson Layer <span style="font-size:13px;font-weight:400;color:var(--muted);">— where the trend becomes action</span></h3>
+        <p style="margin-bottom:16px;">The most important section for the innovation team. Three distinct panels:</p>
+
+        <div class="tyson-panel tp-amber">
+          <div class="tp-title tp-title-amber">❓ How might Tyson…?</div>
+          <p style="font-size:13px;margin-bottom:0;">Strategic provocation questions — open-ended prompts designed to spark innovation thinking. Each question is cited back to the source report that inspired it.</p>
+          <div style="margin-top:10px;background:rgba(255,255,255,.6);border-radius:8px;padding:10px 14px;font-size:13px;font-style:italic;color:#374151;">"How might Tyson position its frozen chicken lines as a GLP-1-compatible protein option at scale?" <span style="font-style:normal;font-size:11px;color:var(--amber);">📄 Tyson Digest Mar 2026</span></div>
+        </div>
+
+        <div class="tyson-panel tp-emerald">
+          <div class="tp-title tp-title-emerald">✓ Already in Tyson's portfolio</div>
+          <p style="font-size:13px;margin-bottom:0;">Real Tyson products from the Salsify catalog already riding this trend — grouped by brand. Shows where Tyson already has equity. Pulled directly from <strong>tyson_products_enriched</strong> in BigQuery using category/segment matching.</p>
+          <div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:6px;">
+            <span style="background:rgba(255,255,255,.7);border:1px solid var(--emerald-mid);border-radius:7px;padding:4px 10px;font-size:12px;font-weight:600;color:#065f46;">Jimmy Dean</span>
+            <span style="background:rgba(255,255,255,.7);border:1px solid var(--emerald-mid);border-radius:7px;padding:4px 10px;font-size:12px;font-weight:600;color:#065f46;">Hillshire Farm</span>
+            <span style="background:rgba(255,255,255,.7);border:1px solid var(--emerald-mid);border-radius:7px;padding:4px 10px;font-size:12px;font-weight:600;color:#065f46;">Ball Park</span>
+            <span style="background:rgba(255,255,255,.7);border:1px solid var(--emerald-mid);border-radius:7px;padding:4px 10px;font-size:12px;font-weight:600;color:#065f46;">Aidells</span>
+            <span style="background:rgba(255,255,255,.7);border:1px solid var(--emerald-mid);border-radius:7px;padding:4px 10px;font-size:12px;font-weight:600;color:#065f46;">Tyson</span>
+          </div>
+        </div>
+
+        <div class="tyson-panel tp-indigo">
+          <div class="tp-title tp-title-indigo">◈ White space &amp; new concepts</div>
+          <p style="font-size:13px;margin-bottom:12px;">A card grid combining two forward-looking intelligence types:</p>
+          <div class="panel-inner pi-blue" style="margin-bottom:8px;">
+            <span class="badge badge-gap">Market gap</span>
+            <strong style="display:block;margin:6px 0 4px;font-size:13px;">Globally-proven formats not yet in the US</strong>
+            <p style="font-size:12px;color:#374151;margin:0;">E.g. <em>Korean corn dog — kiosks sell 1,000+/day; the US freezer aisle has nothing like this yet.</em> Sourced from web harvest.</p>
+          </div>
+          <div class="panel-inner pi-violet">
+            <span class="badge badge-adj" style="margin-right:4px;">Adjacent</span><span class="badge badge-str">Stretch</span>
+            <strong style="display:block;margin:6px 0 4px;font-size:13px;">Net-new Tyson concept ideas</strong>
+            <p style="font-size:12px;color:#374151;margin:0;">Adjacent and Stretch-tier product concepts with brand, format, occasion, validation, and source links. Core ideas are filtered out — those already appear in the portfolio panel.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="dossier-block">
+      <div class="sec-num">07</div>
+      <div class="sec-body">
+        <h3>References</h3>
+        <p>A numbered bibliography of every source cited in the dossier. Internal documents (📄) open at the exact cited page. External URLs (↗) open directly in a new tab. Every superscript [n] in the dossier resolves here.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr/>
+
+<!-- ══════════ 05 CITATIONS ══════════ -->
+<section>
+  <div class="section-label">05 — Trust</div>
+  <h2>The citation system</h2>
+  <p style="font-size:16px;color:#4b5563;margin-bottom:24px;">Every synthesised claim carries a citation. Two kinds:</p>
+  <div class="grid-2">
+    <div class="card" style="border-top:3px solid #0f0f0f;">
+      <div style="font-size:28px;margin-bottom:12px;">📄</div>
+      <h3>Internal document</h3>
+      <p>Links to an uploaded PDF or PPTX and opens it at the <strong>exact page number</strong> where the claim was found. Used for agency decks, Mintel reports, and Tyson digests.</p>
+      <div class="cite-chip" style="margin-top:14px;"><span>📄 Mintel Protein Trends 2025</span><span class="num">· p.14</span></div>
+    </div>
+    <div class="card" style="border-top:3px solid var(--sky);">
+      <div style="font-size:28px;margin-bottom:12px;">↗</div>
+      <h3>External URL</h3>
+      <p>Links to a web article, brand press release, or news source. Opens in a new tab. Used for web harvest finds and external validation.</p>
+      <div class="cite-chip" style="margin-top:14px;"><span>↗ Chipotle High-Protein Menu Launch — Chipotle.com</span></div>
+    </div>
+  </div>
+  <div class="callout callout-amber" style="margin-top:4px;">
+    <div class="callout-icon">🔢</div>
+    <div>
+      <strong>Academic-style numbering:</strong>
+      <p>Superscripts [1] [2] [3] appear inline next to claims. The same source used multiple times gets the same number throughout the dossier. All resolve in the References section at the bottom.</p>
+    </div>
+  </div>
+</section>
+
+<hr/>
+
+<!-- ══════════ 06 KEY CONCEPTS ══════════ -->
+<section>
+  <div class="section-label">06 — Key Concepts</div>
+  <h2>Things to know</h2>
+
+  <!-- Whitespace vs Opportunity -->
+  <div class="card" style="margin-bottom:16px;">
+    <h3 style="margin-bottom:16px;">Whitespace vs. Opportunity — the difference</h3>
+    <div class="grid-2" style="gap:12px;">
+      <div style="background:var(--indigo-light);border:1px solid var(--indigo-mid);border-radius:14px;padding:20px;">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.14em;color:var(--indigo);margin-bottom:8px;">Whitespace</div>
+        <p style="font-size:14px;margin-bottom:10px;">A market gap nobody has claimed yet — including Tyson. Formats proven in other markets (Japan, Korea, Europe) that haven't landed in the US. The <strong>signal</strong>.</p>
+        <div style="background:rgba(255,255,255,.7);border-radius:8px;padding:10px;font-size:12px;font-style:italic;color:#374151;">"Konbini egg salad sandwiches are selling at every Japanese 7-Eleven and just starting to appear in US c-stores — nobody in the US frozen aisle owns this."</div>
+      </div>
+      <div style="background:var(--violet-light);border:1px solid var(--violet-mid);border-radius:14px;padding:20px;">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.14em;color:var(--violet);margin-bottom:8px;">Opportunity</div>
+        <p style="font-size:14px;margin-bottom:10px;">A specific Tyson product concept scoped to existing manufacturing, brands, and categories — with a tier and reasoning. The <strong>response</strong>.</p>
+        <div style="background:rgba(255,255,255,.7);border-radius:8px;padding:10px;font-size:12px;font-style:italic;color:#374151;">"Konbini Karaage Grab-and-Go Packs — chilled 3-piece fried chicken for the c-store case. Adjacent tier — Tyson has the capability, not the format."</div>
+      </div>
+    </div>
+    <div class="callout callout-emerald" style="margin-top:12px;margin-bottom:0;">
+      <div class="callout-icon">💬</div>
+      <div><strong>One-liner:</strong> Whitespace is the signal ("there's a gap here"). Opportunity is the response ("here's how Tyson fills it").</div>
+    </div>
+  </div>
+
+  <!-- Three tiers -->
+  <div class="card" style="margin-bottom:16px;">
+    <h3 style="margin-bottom:16px;">The three permission tiers</h3>
+    <div class="tier-row">
+      <span class="tier-badge-lg badge-core" style="background:#dcfce7;color:#14532d;">Core</span>
+      <div>
+        <strong>Tyson already makes this.</strong>
+        <p style="font-size:13px;">The product type exists in the portfolio. This is a renovation, re-positioning, or line extension — not a new build. Lowest risk, fastest to market. Example: adding a hot honey glaze to an existing bacon line.</p>
+      </div>
+    </div>
+    <div class="tier-row">
+      <span class="tier-badge-lg badge-adj" style="background:#dbeafe;color:#1e3a8a;">Adjacent</span>
+      <div>
+        <strong>New format, existing brand permission.</strong>
+        <p style="font-size:13px;">Tyson has the brand equity and manufacturing capability — it's a new occasion, format, or flavor system. Medium risk, medium investment. Example: Tyson launching a konbini-style karaage pack for c-stores.</p>
+      </div>
+    </div>
+    <div class="tier-row">
+      <span class="tier-badge-lg badge-str" style="background:#ffedd5;color:#7c2d12;">Stretch</span>
+      <div>
+        <strong>Genuinely new territory.</strong>
+        <p style="font-size:13px;">Requires new capability, a partnership, or a new brand build. High reward, high investment. Example: self-heating packaging (exothermic element), freeze-dried fried chicken at scale.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Portfolio + Strength -->
+  <div class="grid-2">
+    <div class="card card-sm">
+      <h4>Portfolio panel</h4>
+      <h3>What Tyson already makes</h3>
+      <p style="font-size:13px;">Pulled from <strong>tyson_products_enriched</strong> (Salsify catalog, ~6,300 SKUs). Matched to each megatrend by category and segment, deduplicated by product name, grouped by brand. Shows leadership that Tyson isn't starting from zero in any trend space.</p>
+    </div>
+    <div class="card card-sm">
+      <h4>Strength scorecard</h4>
+      <h3>How megatrend strength is measured</h3>
+      <p style="font-size:13px;">Four signals: <strong>Report classes</strong> (how many source types mention it), <strong>Report count</strong> (total docs), <strong>Month coverage</strong> (consecutive monthly digests — durability), <strong>Rising terms</strong> (Google Trends YoY growth).</p>
+    </div>
+  </div>
+</section>
+
+<hr/>
+
+<!-- ══════════ 07 ROADMAP ══════════ -->
+<section>
+  <div class="section-label">07 — Roadmap</div>
+  <h2>What's next</h2>
+  <div class="grid-3">
+    <div class="card card-sm" style="border-top:3px solid var(--indigo);">
+      <h4>Phase 2</h4>
+      <h3>Smarter portfolio matching</h3>
+      <p style="font-size:13px;">LLM-based semantic matching links the full 6,300-SKU Salsify catalog to each megatrend with a rationale per product — instead of category heuristics.</p>
+    </div>
+    <div class="card card-sm" style="border-top:3px solid var(--teal);">
+      <h4>Phase 2</h4>
+      <h3>Dossier refresh pipeline</h3>
+      <p style="font-size:13px;">When new reports are uploaded, the relevant megatrend dossiers automatically re-synthesise with the new source included — no manual refresh needed.</p>
+    </div>
+    <div class="card card-sm" style="border-top:3px solid var(--violet);">
+      <h4>Phase 2</h4>
+      <h3>Signal → response linking</h3>
+      <p style="font-size:13px;">Surface the relationship between whitespace market gaps and the specific Tyson concepts that respond to them — visible as a chain in one view.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ FOOTER ══════════ -->
+<div class="footer">
+  <span><strong>TrendLens</strong> — Tyson Foods Innovation Intelligence</span>
+  <span>Marketing Analytics · August 2026</span>
+</div>
+
+</div><!-- /page -->
+</body>
+</html>

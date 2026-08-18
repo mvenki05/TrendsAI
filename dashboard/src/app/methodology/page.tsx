@@ -26,29 +26,22 @@ const SOURCE_META: Record<string, { name: string; desc: string; color: string; b
   },
   tyson: {
     name: "Tyson Internal Digests",
-    desc: "Tyson's own monthly trend digests — insight cards tracked across months for persistence scoring. The only proprietary source in the system.",
+    desc: "Tyson's own monthly trend digests, with insight cards tracked across months for persistence scoring. The only proprietary source in the system.",
     color: "border-emerald-200 bg-emerald-50",
     badge: "bg-emerald-100 text-emerald-700",
     icon: "🐔",
-  },
-  hartman: {
-    name: "Hartman Group",
-    desc: "Occasion-level consumer research: who eats what, when, why. Complements Mintel's category view with anthropological eating-occasion depth.",
-    color: "border-orange-200 bg-orange-50",
-    badge: "bg-orange-100 text-orange-700",
-    icon: "🍽️",
   },
 };
 
 const DOSSIER_SECTIONS = [
   { icon: "📌", title: "Definition", desc: "A plain-language statement of what the megatrend is and why it matters for food and protein." },
   { icon: "📊", title: "Strength Scorecard", desc: "Four transparent scores: evidence classes, report count, persistence (months in internal digests), and rising search terms." },
-  { icon: "🔎", title: "What's Happening Now", desc: "Synthesized narrative of current market signals — what's been observed, what it means, what's still emerging." },
+  { icon: "🔎", title: "What's Happening Now", desc: "Synthesized narrative of current market signals: what's been observed, what it means, what's still emerging." },
   { icon: "⏱️", title: "Now / Next / Later Horizons", desc: "Three time bands with rationale: today's consumer behaviour, the 12-24 month signal, and the 3–5 year structural shift." },
-  { icon: "📈", title: "Key Stats", desc: "Cited quantitative claims extracted from source reports — survey numbers, penetration data, growth rates — each linked to its original document and page." },
+  { icon: "📈", title: "Key Stats", desc: "Cited quantitative claims extracted from source reports: survey numbers, penetration data, and growth rates, each linked to its original document and page." },
   { icon: "🔍", title: "Measured Demand", desc: "Google Trends search-interest series for the trend's top terms, classified as rising, durable, or fading." },
   { icon: "🌿", title: "Merged Subtrends", desc: "All subtrends from across every source document that belong to this canonical megatrend, deduplicated and attributed." },
-  { icon: "🐔", title: "Tyson Layer", desc: "Question bank, product concepts, and white-space opportunities — anchored to Tyson's real SKU catalog across 26 categories." },
+  { icon: "🐔", title: "Tyson Layer", desc: "Question bank, product concepts, and white-space opportunities, anchored to Tyson's real SKU catalog across 26 categories." },
   { icon: "📑", title: "Bibliography", desc: "Every source document used in the dossier, with clickable links to open the original file at the cited page." },
 ];
 
@@ -92,7 +85,7 @@ const STEPS = [
   {
     n: 5,
     title: "Synthesize",
-    subtitle: "The Megatrend Codex",
+    subtitle: "Megatrends",
     color: "bg-rose-600",
     ring: "ring-rose-200",
     accent: "text-rose-600",
@@ -141,10 +134,10 @@ export default function MethodologyPage() {
       <div className="rounded-3xl bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-8 text-white shadow-xl ring-1 ring-white/10 lg:p-10">
         <div className="max-w-3xl">
           <div className="text-[11px] font-bold uppercase tracking-[0.2em] text-emerald-400">How it works</div>
-          <h1 className="mt-2 text-4xl font-extrabold tracking-tight lg:text-5xl">TrendLens Methodology</h1>
+          <h1 className="mt-2 font-display text-4xl font-semibold tracking-tight lg:text-5xl">TrendLens Methodology</h1>
           <p className="mt-4 text-[15px] leading-relaxed text-slate-300">
             A six-stage pipeline that turns raw source documents into fully cited, demand-validated trend intelligence.
-            Nothing on this platform is invented — every trend is extracted from a named source and every demand
+            Nothing on this platform is invented: every trend is extracted from a named source and every demand
             claim is measured against real Google search behaviour.
           </p>
           <div className="mt-6 flex flex-wrap items-center gap-2 text-[13px] font-medium text-slate-400">
@@ -161,7 +154,7 @@ export default function MethodologyPage() {
             <StatTile value={totalReports ?? "—"} label="Source reports" sub="across 4 providers" />
             <StatTile value={totalNodes ?? "—"} label="Extracted items" sub="products, trends, behaviours" />
             <StatTile value={stats.measures.measured_terms} label="Terms measured" sub="via Google Trends" />
-            <StatTile value={stats.synthesis.dossiers} label="Codex dossiers" sub="canonical megatrends" />
+            <StatTile value={stats.synthesis.dossiers} label="Megatrend dossiers" sub="canonical megatrends" />
           </div>
         )}
       </div>
@@ -170,7 +163,7 @@ export default function MethodologyPage() {
       <div>
         <div className="mb-6">
           <div className="text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">The pipeline</div>
-          <h2 className="mt-1 text-2xl font-extrabold tracking-tight text-slate-900">Six stages from source to insight</h2>
+          <h2 className="mt-1 font-display text-2xl font-semibold tracking-tight text-slate-900">Six stages from source to insight</h2>
         </div>
 
         <div className="relative space-y-0">
@@ -180,7 +173,7 @@ export default function MethodologyPage() {
           {/* Step 1 */}
           <StepCard step={STEPS[0]}>
             <p>
-              The system ingests trend reports exactly as published — agency decks, Mintel research, Hartman Group
+              The system ingests trend reports exactly as published: agency decks, Mintel research, Hartman Group
               occasion studies and Tyson&apos;s own monthly digests. Files are stored unmodified; every claim extracted
               later keeps a direct link back to the original document and, where possible, the exact page number.
             </p>
@@ -227,7 +220,7 @@ export default function MethodologyPage() {
               </div>
             )}
             <p className="mt-2 text-[12.5px] text-slate-500">
-              Re-uploading a file updates its report in place (matched by filename) — no duplicates accumulate.
+              Re-uploading a file updates its report in place (matched by filename); no duplicates accumulate.
               Each file gets a permanent report ID used to deep-link back to the original at any citation.
             </p>
           </StepCard>
@@ -275,13 +268,13 @@ export default function MethodologyPage() {
           <StepCard step={STEPS[2]}>
             <p>
               Every extracted product and ingredient gets a normalised search term. The system then measures
-              real Google search interest using a Playwright real-browser scraper (no API key needed — results
+              real Google search interest using a Playwright real-browser scraper (no API key needed; results
               match what a consumer actually sees). Weekly series are pulled for the US market.
             </p>
             <div className="mt-3 grid gap-3 sm:grid-cols-3">
               {[
                 { label: "Rising", desc: "Year-over-year search growth", cls: "bg-emerald-100 border-emerald-200 text-emerald-800" },
-                { label: "Durable", desc: "Rising + low volatility — sustained, not a spike", cls: "bg-teal-100 border-teal-200 text-teal-800" },
+                { label: "Durable", desc: "Rising + low volatility, sustained rather than a spike", cls: "bg-teal-100 border-teal-200 text-teal-800" },
                 { label: "Fading", desc: "Declining or flat interest over 12 months", cls: "bg-slate-100 border-slate-200 text-slate-600" },
               ].map(({ label, desc, cls }) => (
                 <div key={label} className={`rounded-xl border px-4 py-3 ${cls}`}>
@@ -301,7 +294,7 @@ export default function MethodologyPage() {
               </div>
             )}
             <p className="mt-2 text-[12.5px] text-slate-500">
-              Google Trends values are relative interest (0–100) within the measured period — best read
+              Google Trends values are relative interest (0–100) within the measured period, best read
               as momentum signals, not absolute market size. Durable classifications filter out viral spikes.
             </p>
           </StepCard>
@@ -309,14 +302,14 @@ export default function MethodologyPage() {
           {/* Step 4 */}
           <StepCard step={STEPS[3]}>
             <p>
-              Independently of the paid reports, TrendLens harvests the open internet — trade press (Food Business
-              News, Nation&apos;s Restaurant News), food media, retailer launch activity — into its own bottom-up
-              trend map. This is built from scratch, without knowledge of what the decks say.
+              Independently of the paid reports, TrendLens harvests the open internet: trade press (Food Business
+              News, Nation&apos;s Restaurant News), food media, retailer launch activity, building its own bottom-up
+              trend map from scratch, without knowledge of what the decks say.
             </p>
             <p className="mt-2">
               The two streams are then compared. A trend that appears in both an agency deck <em>and</em> the organic
               web harvest is stronger than a trend only one source mentions. Single-source signals are preserved
-              but marked as thin evidence — never amplified into the synthesis.
+              but marked as thin evidence, never amplified into the synthesis.
             </p>
             <div className="mt-3 rounded-xl border border-amber-100 bg-amber-50 p-4 text-[13px]">
               <div className="mb-2 text-[11px] font-bold uppercase tracking-widest text-amber-600">Corroboration logic</div>
@@ -341,11 +334,11 @@ export default function MethodologyPage() {
           {/* Step 5 */}
           <StepCard step={STEPS[4]}>
             <p>
-              All extracted trends — across every report, web harvest, and internal digest — are clustered into
+              All extracted trends, across every report, web harvest, and internal digest, are clustered into
               ten canonical megatrends. Each gets one deeply detailed dossier that combines every source touching it.
             </p>
             <div className="mt-3 rounded-xl border border-rose-100 bg-rose-50 p-4 text-[13px]">
-              <div className="mb-2 text-[11px] font-bold uppercase tracking-widest text-rose-500">Strength scorecard — 4 dimensions</div>
+              <div className="mb-2 text-[11px] font-bold uppercase tracking-widest text-rose-500">Strength scorecard: 4 dimensions</div>
               <div className="grid gap-2 sm:grid-cols-2">
                 {[
                   ["Evidence classes","How many independent kinds of proof: product, ingredient, behaviour, value"],
@@ -362,12 +355,12 @@ export default function MethodologyPage() {
             </div>
             <p className="mt-2 text-[13px] text-slate-600">
               The Tyson layer is generated against Tyson&apos;s real product catalog
-              {stats ? ` (${stats.synthesis.tyson_skus.toLocaleString()} SKUs across 26 categories)` : ""} — so
+              {stats ? ` (${stats.synthesis.tyson_skus.toLocaleString()} SKUs across 26 categories)` : ""}, so
               every white-space opportunity and concept is anchored to a category the company can actually build in.
             </p>
             {stats && (
               <div className="mt-2 inline-flex items-center gap-2 rounded-lg bg-rose-100 px-3 py-1.5 text-[13px] font-bold text-rose-700">
-                {stats.synthesis.dossiers} Codex dossiers published
+                {stats.synthesis.dossiers} Megatrend dossiers published
               </div>
             )}
           </StepCard>
@@ -394,7 +387,7 @@ export default function MethodologyPage() {
               </div>
             </div>
             <p className="mt-3 text-[13px] text-slate-600">
-              Each dossier ends with a full bibliography listing every document used — sortable by source type.
+              Each dossier ends with a full bibliography listing every document used, sortable by source type.
               If a claim can&apos;t be traced, it doesn&apos;t ship.
             </p>
           </StepCard>
@@ -404,7 +397,7 @@ export default function MethodologyPage() {
       {/* ── What's in a dossier ──────────────────────────────────────── */}
       <div>
         <div className="mb-2 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">The output</div>
-        <h2 className="text-2xl font-extrabold tracking-tight text-slate-900">What&apos;s inside a Codex dossier</h2>
+        <h2 className="font-display text-2xl font-semibold tracking-tight text-slate-900">What&apos;s inside a Megatrend dossier</h2>
         <p className="mt-1 text-[14px] text-slate-500">Each of the ten canonical megatrends gets all of the following, fully cited.</p>
         <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {DOSSIER_SECTIONS.map(({ icon, title, desc }) => (
@@ -421,7 +414,7 @@ export default function MethodologyPage() {
       {/* ── Trust principles ─────────────────────────────────────────── */}
       <div className="rounded-3xl bg-slate-900 p-8 text-white ring-1 ring-white/10">
         <div className="text-[11px] font-bold uppercase tracking-[0.2em] text-emerald-400">Our commitments</div>
-        <h2 className="mt-1 text-2xl font-extrabold tracking-tight">The rules the system holds itself to</h2>
+        <h2 className="mt-1 font-display text-2xl font-semibold tracking-tight">The rules the system holds itself to</h2>
         <div className="mt-5 grid gap-3 sm:grid-cols-2">
           {[
             ["Grounded extraction", "Nothing is added that a source document doesn't explicitly state. No embellishment, no inference beyond what's written."],
@@ -429,9 +422,9 @@ export default function MethodologyPage() {
             ["Full traceability", "Every claim links to its original document at the exact page, or to the URL it was harvested from."],
             ["Thin-evidence honesty", "Single-source trends are preserved but clearly marked. They are never amplified into synthesis."],
             ["Unmodified originals", "Source files are stored exactly as received and are always openable from citations."],
-            ["Transparent scoring", "Strength scores are computed from objective counts — evidence classes, report counts, months seen — not editorial judgment."],
+            ["Transparent scoring", "Strength scores are computed from objective counts (evidence classes, report counts, months seen), not editorial judgment."],
             ["No brand inflation", "Tyson product opportunities are anchored to the real SKU catalog. Whitespace claims only land where there's actual portfolio capacity."],
-            ["No stale synthesis", "After any new report is ingested, the Codex dossiers are rebuilt to incorporate it — the system doesn't drift from its source material."],
+            ["No stale synthesis", "After any new report is ingested, the Megatrend dossiers are rebuilt to incorporate it. The system never drifts from its source material."],
           ].map(([title, desc]) => (
             <div key={title} className="flex gap-3 rounded-xl bg-white/5 px-4 py-3">
               <span className="mt-0.5 shrink-0 font-extrabold text-emerald-400">✓</span>
@@ -461,7 +454,7 @@ function StepCard({ step, children }: { step: typeof STEPS[0]; children: React.R
         <div className={`rounded-2xl border ${step.bg} p-5 shadow-sm`}>
           <div className="flex items-baseline gap-2">
             <h3 className={`text-lg font-extrabold tracking-tight ${step.accent}`}>{step.title}</h3>
-            <span className="text-[13px] font-semibold text-slate-500">— {step.subtitle}</span>
+            <span className="text-[13px] font-semibold text-slate-500">{step.subtitle}</span>
           </div>
           <div className="mt-3 space-y-2 text-[13.5px] leading-relaxed text-slate-700">{children}</div>
         </div>

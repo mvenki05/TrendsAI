@@ -15,7 +15,7 @@ const MORE_GROUPS: { title: string; items: { href: string; label: string; icon: 
   {
     title: "Intelligence",
     items: [
-      { href: "/", label: "Reports", icon: "▣", match: (p) => p === "/" || p.startsWith("/report") },
+      { href: "/reports", label: "Reports", icon: "▣", match: (p) => p.startsWith("/report") },
       { href: "/map", label: "Trend Map", icon: "🗺️", match: (p) => p.startsWith("/map") },
     ],
   },
@@ -31,7 +31,6 @@ const MORE_GROUPS: { title: string; items: { href: string; label: string; icon: 
     title: "Sources",
     items: [
       { href: "/mintel", label: "Mintel", icon: "📚", match: (p) => p.startsWith("/mintel") },
-      { href: "/hartman", label: "Hartman", icon: "🍽️", match: (p) => p.startsWith("/hartman") },
       { href: "/tyson", label: "Tyson Bites", icon: "🐔", match: (p) => p.startsWith("/tyson") },
     ],
   },
@@ -45,7 +44,7 @@ type CodexMode = "closed" | "list" | "detail";
 
 // Sections before the subtrends block, sections after
 const SECTIONS_BEFORE: [string, string][] = [
-  ["sec-now",      "Now"],
+  ["sec-now",      "What's happening now"],
   ["sec-horizons", "Horizons"],
 ];
 const SECTIONS_AFTER: [string, string][] = [
@@ -128,23 +127,12 @@ export function Sidebar() {
   );
 
   return (
-    <aside className="fixed left-0 top-0 z-10 flex h-full w-56 flex-col border-r border-slate-200 bg-white">
-      {/* Logo */}
-      <div className="flex items-center gap-2.5 border-b border-slate-100 px-5 py-5">
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-sky-600 text-base font-bold text-white shadow-sm">
-          T
-        </div>
-        <div className="min-w-0">
-          <div className="font-display text-lg font-semibold tracking-tight text-slate-900">TrendLens</div>
-          <div className="text-[10px] font-medium uppercase tracking-[0.18em] text-slate-400">Trend Intelligence</div>
-        </div>
-      </div>
-
+    <aside className="fixed left-0 top-12 z-10 flex h-[calc(100vh-3rem)] w-56 flex-col border-r border-slate-200 bg-[#FAF9F6]">
       <nav className="flex-1 overflow-y-auto px-3 py-3">
-        {/* Megatrend Codex nav item */}
+        {/* Megatrends nav item */}
         <NavLink
           href="/best"
-          label="Megatrend Codex"
+          label="Megatrends"
           icon="🏛️"
           active={onCodex}
           onClick={onCodex ? handleCodexLinkClick : undefined}

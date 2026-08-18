@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { PresentMode } from "@/components/present-mode";
 
 // Scroll-reveal: content glides up into place the first time it enters the viewport.
@@ -59,8 +60,9 @@ interface Dossier {
     evidence: { level: string; name: string; detail?: string; cite?: Cite }[] }[];
   horizons: Record<"short" | "medium" | "long", { title: string; detail: string; rationale: string; cite?: Cite }[]>;
   demand: { summary: string; risers: { term: string; yoy: number }[]; decliners: { term: string; yoy: number }[] };
-  tyson_questions: string[];
-  tyson_ideas: { name: string; brand?: string; tier?: string; note?: string }[];
+  tyson_questions: (string | { question: string; cite?: Cite | null })[];
+  tyson_portfolio: { brand: string; name: string }[];
+  tyson_ideas: { name: string; brand?: string; tier?: string; format?: string; occasion?: string; note?: string; validation?: string; subtrend?: string; cites?: Cite[] }[];
   whitespace: { name: string; note?: string; cite?: Cite }[];
   sources: { kind: string; report_id?: string; label: string; source_tag?: string }[];
 }
@@ -74,17 +76,17 @@ interface CodexRow {
   dossier: string | null;
 }
 
-const THEME: Record<string, { dot: string; grad: string; ring: string }> = {
-  protein:     { dot: "bg-red-500",     grad: "from-red-600 to-rose-500",      ring: "ring-red-200" },
-  value:       { dot: "bg-amber-500",   grad: "from-amber-600 to-orange-500",  ring: "ring-amber-200" },
-  cleanlabel:  { dot: "bg-emerald-500", grad: "from-emerald-600 to-teal-500",  ring: "ring-emerald-200" },
-  glp1:        { dot: "bg-purple-500",  grad: "from-purple-600 to-fuchsia-500",ring: "ring-purple-200" },
-  blur:        { dot: "bg-sky-500",     grad: "from-sky-600 to-cyan-500",      ring: "ring-sky-200" },
-  convenience: { dot: "bg-teal-500",    grad: "from-teal-600 to-emerald-500",  ring: "ring-teal-200" },
-  flavor:      { dot: "bg-orange-500",  grad: "from-orange-600 to-amber-500",  ring: "ring-orange-200" },
-  functional:  { dot: "bg-lime-600",    grad: "from-lime-600 to-green-500",    ring: "ring-lime-200" },
-  conscious:   { dot: "bg-green-600",   grad: "from-green-700 to-emerald-500", ring: "ring-green-200" },
-  social:      { dot: "bg-indigo-500",  grad: "from-indigo-600 to-violet-500", ring: "ring-indigo-200" },
+const THEME: Record<string, { dot: string; grad: string; ring: string; bar: string; tint: string; num: string }> = {
+  protein:     { dot: "bg-red-500",     grad: "from-red-600 to-rose-500",      ring: "ring-red-200",    bar: "bg-red-500",     tint: "from-red-50 to-white",     num: "text-red-100"     },
+  value:       { dot: "bg-amber-500",   grad: "from-amber-600 to-orange-500",  ring: "ring-amber-200",  bar: "bg-amber-500",   tint: "from-amber-50 to-white",   num: "text-amber-100"   },
+  cleanlabel:  { dot: "bg-emerald-500", grad: "from-emerald-600 to-teal-500",  ring: "ring-emerald-200",bar: "bg-emerald-500", tint: "from-emerald-50 to-white", num: "text-emerald-100" },
+  glp1:        { dot: "bg-purple-500",  grad: "from-purple-600 to-fuchsia-500",ring: "ring-purple-200", bar: "bg-purple-500",  tint: "from-purple-50 to-white",  num: "text-purple-100"  },
+  blur:        { dot: "bg-sky-500",     grad: "from-sky-600 to-cyan-500",      ring: "ring-sky-200",    bar: "bg-sky-500",     tint: "from-sky-50 to-white",     num: "text-sky-100"     },
+  convenience: { dot: "bg-teal-500",    grad: "from-teal-600 to-emerald-500",  ring: "ring-teal-200",   bar: "bg-teal-500",    tint: "from-teal-50 to-white",    num: "text-teal-100"    },
+  flavor:      { dot: "bg-orange-500",  grad: "from-orange-600 to-amber-500",  ring: "ring-orange-200", bar: "bg-orange-500",  tint: "from-orange-50 to-white",  num: "text-orange-100"  },
+  functional:  { dot: "bg-lime-600",    grad: "from-lime-600 to-green-500",    ring: "ring-lime-200",   bar: "bg-lime-500",    tint: "from-lime-50 to-white",    num: "text-lime-100"    },
+  conscious:   { dot: "bg-green-600",   grad: "from-green-700 to-emerald-500", ring: "ring-green-200",  bar: "bg-green-600",   tint: "from-green-50 to-white",   num: "text-green-100"   },
+  social:      { dot: "bg-indigo-500",  grad: "from-indigo-600 to-violet-500", ring: "ring-indigo-200", bar: "bg-indigo-500",  tint: "from-indigo-50 to-white",  num: "text-indigo-100"  },
 };
 
 const TAG_STYLE: Record<string, string> = {
@@ -140,21 +142,10 @@ function CiteLink({ cite, refNo }: { cite?: Cite; refNo?: number }) {
 }
 
 // Editorial numbered section header: "01 — EYEBROW" over a serif title.
-function SectionTitle({ no, eyebrow, children, tone = "text-slate-900" }: {
+function SectionTitle({ children, tone = "text-slate-900" }: {
   no?: string; eyebrow?: string; children: React.ReactNode; tone?: string;
 }) {
-  return (
-    <div>
-      {(no || eyebrow) && (
-        <p className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.22em] text-slate-400">
-          {no && <span className="font-mono">{no}</span>}
-          {no && <span className="h-px w-6 bg-slate-300" />}
-          {eyebrow}
-        </p>
-      )}
-      <h3 className={`mt-0.5 text-[26px] font-semibold tracking-tight ${tone}`}>{children}</h3>
-    </div>
-  );
+  return <h3 className={`text-[26px] font-semibold tracking-tight ${tone}`}>{children}</h3>;
 }
 
 function HorizonColumn({ title, sub, items, accent, tone, refFor }: {
@@ -189,48 +180,21 @@ export default function CodexPage() {
   const [loading, setLoading] = useState(true);
   const [flash, setFlash] = useState<number | null>(null);
   const [presenting, setPresenting] = useState(false);
+  const [selectedSub, setSelectedSub] = useState(0);
+  const carouselRef = useRef<HTMLDivElement>(null);
 
-  // Receive megatrend selection from sidebar clicks
+  // Reset subtrend selection when switching megatrends
   useEffect(() => {
-    const handler = (e: Event) => { setSelected((e as CustomEvent).detail); setFlash(null); };
-    window.addEventListener("codex-select", handler);
-    return () => window.removeEventListener("codex-select", handler);
-  }, []);
-
-  // Tell sidebar which megatrend is active
-  useEffect(() => {
-    if (selected) window.dispatchEvent(new CustomEvent("codex-active", { detail: selected }));
+    setSelectedSub(0);
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
   }, [selected]);
 
-  // Send subtrend names to sidebar whenever selection changes
-  useEffect(() => {
-    const r = rows.find((row) => row.key === selected);
-    const d = r?.dossier ? JSON.parse(r.dossier) : null;
-    const names: string[] = d?.subtrends?.map((s: { name: string }) => s.name) ?? [];
-    window.dispatchEvent(new CustomEvent("codex-subtrends", { detail: names }));
-  }, [selected, rows]);
-
   const jumpToSubtrend = (i: number) => {
-    document.getElementById(`subtrend-${i}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
-    setFlash(i);
-    window.setTimeout(() => setFlash(null), 1800);
+    setSelectedSub(i);
+    document.getElementById("sec-subtrends")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    setTimeout(() => document.getElementById(`subtrend-card-${i}`)?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" }), 300);
   };
-
-  const jumpToSection = (id: string) => {
-    document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
-  };
-
-  // Handle jump events from sidebar
-  useEffect(() => {
-    const jumpSection = (e: Event) => jumpToSection((e as CustomEvent).detail);
-    const jumpSubtrend = (e: Event) => jumpToSubtrend((e as CustomEvent).detail);
-    window.addEventListener("codex-jump-section", jumpSection);
-    window.addEventListener("codex-jump-subtrend", jumpSubtrend);
-    return () => {
-      window.removeEventListener("codex-jump-section", jumpSection);
-      window.removeEventListener("codex-jump-subtrend", jumpSubtrend);
-    };
-  }, []);
 
   const load = useCallback(() => {
     fetch("/api/codex")
@@ -266,6 +230,7 @@ export default function CodexPage() {
     (["short", "medium", "long"] as const).forEach((h) => dossier.horizons?.[h]?.forEach((i) => add(i.cite)));
     dossier.subtrends?.forEach((s) => s.evidence?.forEach((e) => add(e.cite)));
     dossier.key_stats?.forEach((s) => add(s.cite));
+    dossier.tyson_questions?.forEach((q) => { if (typeof q !== "string" && q.cite) add(q.cite); });
     dossier.whitespace?.forEach((w) => add(w.cite));
   }
   const refFor = (c?: Cite) => { const k = citeKey(c); return k ? refMap.get(k) : undefined; };
@@ -297,7 +262,66 @@ export default function CodexPage() {
   const theme = THEME[selected ?? ""] ?? { dot: "bg-slate-500", grad: "from-slate-700 to-slate-500", ring: "ring-slate-200" };
 
   return (
-    <div className="min-h-screen">
+    <div className="flex min-h-screen">
+      {/* ── Built-in megatrend selector panel ───────────────────── */}
+      <aside className="fixed left-0 top-12 z-10 flex h-[calc(100vh-3rem)] w-[220px] flex-col border-r border-slate-200 bg-[#FAF9F6]">
+        {/* Megatrend image cards */}
+        <div className="flex-1 overflow-y-auto p-2.5 space-y-2 [&::-webkit-scrollbar]:hidden [scrollbar-width:none]">
+          {rows.map((r) => {
+            const isActive = selected === r.key;
+            return (
+              <div key={r.key}>
+                <button
+                  onClick={() => { setSelected(r.key); setFlash(null); }}
+                  className={`group relative w-full overflow-hidden rounded-xl text-left transition ${
+                    isActive
+                      ? "ring-2 ring-slate-900 shadow-md"
+                      : "border border-slate-200 shadow-sm hover:shadow-md hover:border-slate-300"
+                  }`}
+                >
+                  <div className="relative h-[72px]">
+                    <Image
+                      src={`/megatrends/${r.key}.png`}
+                      alt={r.name}
+                      fill
+                      className="object-cover transition duration-300 group-hover:scale-105"
+                      sizes="196px"
+                    />
+                    <div className={`absolute inset-0 bg-gradient-to-t ${isActive ? "from-black/80 via-black/40" : "from-black/65 via-black/20"} to-transparent`} />
+                    <span className="absolute bottom-2.5 left-3 right-3 text-[11.5px] font-semibold leading-tight text-white line-clamp-2">
+                      {r.name}
+                    </span>
+                  </div>
+                </button>
+
+                {/* Section links — expand below the active card */}
+                {isActive && (
+                  <div className="space-y-0.5 px-1 pb-1">
+                    {[
+                      { id: "sec-now",       label: "What's happening now" },
+                      { id: "sec-horizons",  label: "Horizons" },
+                      { id: "sec-subtrends", label: "Subtrends" },
+                      { id: "sec-stats",     label: "Key Stats" },
+                      { id: "sec-tyson",     label: "Tyson Layer" },
+                      { id: "sec-sources",   label: "Sources" },
+                    ].map(({ id, label }) => (
+                      <button key={id}
+                        onClick={() => document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" })}
+                        className="flex w-full items-center gap-2 rounded-lg px-3 py-1.5 text-left text-[12px] font-medium text-slate-500 transition hover:bg-slate-100 hover:text-slate-900">
+                        <span className="h-1 w-1 flex-shrink-0 rounded-full bg-slate-600" />
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </aside>
+
+      {/* ── Dossier content ─────────────────────────────────────── */}
+      <div className="ml-[220px] min-w-0 flex-1">
       {dossier && presenting && (
         <PresentMode dossier={dossier} imageSrc={`/megatrends/${selected}.png`}
                      rank={row?.rank} total={rows.length} onClose={() => setPresenting(false)} />
@@ -309,7 +333,7 @@ export default function CodexPage() {
 
       {!loading && rows.length === 0 && (
         <div className="flex h-64 items-center justify-center p-12 text-slate-400">
-          The codex hasn&apos;t been synthesized yet.
+          No megatrends have been synthesized yet.
         </div>
       )}
 
@@ -329,9 +353,6 @@ export default function CodexPage() {
                           className="absolute right-8 top-8 rounded-full border border-white/30 bg-white/10 px-4 py-2 text-[13px] font-bold backdrop-blur transition hover:scale-105 hover:bg-white/25">
                     ▶ Present
                   </button>
-                  <p className="text-[11px] font-bold uppercase tracking-[0.25em] text-white/60">
-                    Megatrend Dossier {row?.rank ? `· № ${row.rank} of ${rows.length}` : ""}
-                  </p>
                   <h2 className="mt-2 max-w-3xl text-4xl font-semibold leading-[1.08] tracking-tight lg:text-5xl">{dossier.name}</h2>
                   <p className="mt-3 max-w-2xl text-lg font-medium leading-snug text-white/85">{dossier.tagline}</p>
                   <p className="mt-5 max-w-3xl text-[15.5px] leading-relaxed text-white/90">
@@ -340,10 +361,8 @@ export default function CodexPage() {
                   {strength && (
                     <div className="mt-7 flex flex-wrap gap-3">
                       {[
-                        [`${strength.classes?.length ?? 0}/5`, "evidence classes"],
                         [String(strength.report_count), "corroborating reports"],
                         ...(strength.month_count > 0 ? [[String(strength.month_count), "months persistent"]] : []),
-                        ...(strength.rising_terms > 0 ? [[`▲ ${strength.rising_terms}`, "search terms rising"]] : []),
                       ].map(([v, l]) => (
                         <div key={l} className="rounded-xl border border-white/20 bg-white/10 px-4 py-2.5 backdrop-blur-sm">
                           <div className="font-display text-xl font-semibold leading-none">{v}</div>
@@ -354,7 +373,7 @@ export default function CodexPage() {
                   )}
                 </div>
                 <div className="relative bg-black/40 px-8 py-4 backdrop-blur-[2px]">
-                  <p className="max-w-4xl text-[15px] leading-relaxed">
+                  <p className="text-[15px] leading-relaxed">
                     <span className="mr-2 rounded bg-white/25 px-2 py-0.5 text-xs font-extrabold uppercase tracking-wider">Why it matters to Tyson</span>
                     {dossier.why_it_matters_to_tyson}
                   </p>
@@ -416,155 +435,181 @@ export default function CodexPage() {
               <div id="sec-subtrends" className="scroll-mt-24">
                 <Reveal>
                 <SectionTitle no="04" eyebrow="The anatomy">Subtrends &amp; opportunities</SectionTitle>
-                <p className="mt-1.5 text-[13px] text-slate-500">
-                  Each subtrend leads with <span className="font-semibold text-sky-700">the opportunity</span> — developed concepts
-                  with a Tyson category anchor and permission tier (<span className="font-semibold text-emerald-700">✓ Core</span> ·{" "}
-                  <span className="font-semibold text-sky-700">◆ Adjacent</span> · <span className="font-semibold text-orange-600">⚑ Stretch</span>) —
-                  backed by <span className="font-semibold text-violet-700">the consumer truth</span> that makes it real.
-                </p>
                 </Reveal>
-                <div className="mt-4 space-y-4">
-                  {dossier.subtrends?.map((s, i) => (
-                    <Reveal key={i}>
-                    <div id={`subtrend-${i}`}
-                      className={`scroll-mt-24 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition-shadow duration-500
-                        ${flash === i ? "ring-4 ring-amber-400 shadow-lg" : ""}`}>
-                      <div className="border-b border-slate-100 px-7 py-5">
-                        <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-                          <span className="font-mono text-[11px] font-bold text-slate-300">{String(i + 1).padStart(2, "0")}</span>
-                          <h4 className="text-[21px] font-semibold tracking-tight text-slate-900">{s.name}</h4>
-                          {s.geo && <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-bold text-slate-500">{s.geo}</span>}
+                {/* Carousel track */}
+                <div className="relative mt-4">
+                  <div className="absolute -top-10 right-0 flex gap-1.5 z-10">
+                    <button
+                      onClick={() => carouselRef.current?.scrollBy({ left: -296, behavior: "smooth" })}
+                      className="flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm hover:bg-slate-50 hover:text-slate-900 transition text-lg leading-none"
+                    >‹</button>
+                    <button
+                      onClick={() => carouselRef.current?.scrollBy({ left: 296, behavior: "smooth" })}
+                      className="flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm hover:bg-slate-50 hover:text-slate-900 transition text-lg leading-none"
+                    >›</button>
+                  </div>
+                  <div ref={carouselRef}
+                       className="flex gap-3.5 overflow-x-auto scroll-smooth snap-x snap-mandatory pb-3 [&::-webkit-scrollbar]:hidden">
+                    {dossier.subtrends?.map((s, i) => {
+                      const isSel = selectedSub === i;
+                      return (
+                        <div key={i} id={`subtrend-card-${i}`}
+                             onClick={() => setSelectedSub(i)}
+                             className={`w-[268px] flex-none snap-start cursor-pointer rounded-2xl overflow-hidden transition-all duration-300 select-none
+                               ${isSel ? `ring-2 ${theme.ring} shadow-xl` : "border border-slate-200 shadow-sm hover:shadow-md hover:border-slate-300"}`}>
+                          <div className={`relative overflow-hidden bg-gradient-to-br ${theme.grad} h-[160px]`}>
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src={`/subtrends/${selected}-${i}.png`} alt=""
+                                 className="absolute inset-0 h-full w-full object-cover"
+                                 onError={(e) => { e.currentTarget.style.display = "none"; }} />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-black/10" />
+                            <div className="relative z-10 flex h-full flex-col justify-end px-5 pb-4 pt-5">
+                              <h5 className="text-[15px] font-bold leading-snug text-white pr-2 line-clamp-3">{s.name}</h5>
+                              {s.geo && (
+                                <span className="mt-2 inline-block rounded-full bg-white/25 px-1.5 py-px text-[9px] font-bold uppercase tracking-wide text-white/90 leading-tight">
+                                  {s.geo.charAt(0).toUpperCase() + s.geo.slice(1)}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          <div className="bg-white px-5 py-4">
+                            <p className="text-[12px] leading-relaxed text-slate-500 line-clamp-3">{s.description}</p>
+                            {s.opportunities?.[0] && (
+                              <div className="mt-3 border-t border-slate-100 pt-3">
+                                <p className="mb-1 text-[9px] font-extrabold uppercase tracking-[0.2em] text-sky-500">Top opportunity</p>
+                                <p className="text-[12.5px] font-semibold leading-snug text-slate-800 line-clamp-2">{s.opportunities[0].name}</p>
+                              </div>
+                            )}
+                          </div>
                         </div>
-                        <p className="mt-1.5 max-w-5xl text-[14px] leading-relaxed text-slate-500">{s.description}</p>
-                      </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Detail panel — full content for selected subtrend */}
+                {(() => {
+                  const s = dossier.subtrends?.[selectedSub];
+                  if (!s) return null;
+                  const byLevel = (lvl: string) => s.evidence?.filter((e) => e.level === lvl) ?? [];
+                  const psychs = byLevel("psychographic"), behs = byLevel("behaviour");
+                  const other = s.evidence?.filter((e) => !["psychographic", "behaviour", "product", "ingredient"].includes(e.level)) ?? [];
+                  const hasConsumer = psychs.length + behs.length > 0;
+                  const Bullets = ({ items, tone }: { items: typeof psychs; tone: string }) => (
+                    <ul className="mt-1.5 space-y-1.5">
+                      {items.map((e, k) => (
+                        <li key={k} className="flex gap-2">
+                          <span className={`shrink-0 font-bold ${tone}`}>•</span>
+                          <div className="min-w-0 text-[13.5px] leading-snug text-slate-800">
+                            <span className="font-bold">{e.name}</span> <CiteLink cite={e.cite} refNo={refFor(e.cite)} />
+                            {e.detail && <div className="mt-0.5 text-[12px] leading-relaxed text-slate-500">{e.detail}</div>}
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  );
+                  const opps = s.opportunities ?? [];
+                  const citeByName = new Map<string, Cite | undefined>();
+                  s.evidence?.forEach((e) => citeByName.set((e.name || "").trim().toLowerCase(), e.cite));
+                  const citeForBuild = (b: string) => citeByName.get(b.trim().toLowerCase());
+                  return (
+                    <div className="mt-4 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+                      <div className={`h-1 w-full ${theme.bar}`} />
                       <div className="px-7 py-5">
-                      {(() => {
-                        const byLevel = (lvl: string) => s.evidence?.filter((e) => e.level === lvl) ?? [];
-                        const psychs = byLevel("psychographic"), behs = byLevel("behaviour");
-                        const other = s.evidence?.filter((e) => !["psychographic", "behaviour", "product", "ingredient"].includes(e.level)) ?? [];
-                        const hasConsumer = psychs.length + behs.length > 0;
-                        const Bullets = ({ items, tone }: { items: typeof psychs; tone: string }) => (
-                          <ul className="mt-1.5 space-y-1.5">
-                            {items.map((e, k) => (
-                              <li key={k} className="flex gap-2">
-                                <span className={`shrink-0 font-bold ${tone}`}>•</span>
-                                <div className="min-w-0 text-[13.5px] leading-snug text-slate-800">
-                                  <span className="font-bold">{e.name}</span> <CiteLink cite={e.cite} refNo={refFor(e.cite)} />
-                                  {e.detail && <div className="mt-0.5 text-[12px] leading-relaxed text-slate-500">{e.detail}</div>}
-                                </div>
-                              </li>
-                            ))}
-                          </ul>
-                        );
-                        const opps = s.opportunities ?? [];
-                        // Resolve each opportunity's builds_on names to the subtrend's cited evidence,
-                        // so the opportunity itself links back to its supporting reports/sites.
-                        const citeByName = new Map<string, Cite | undefined>();
-                        s.evidence?.forEach((e) => citeByName.set((e.name || "").trim().toLowerCase(), e.cite));
-                        const citeForBuild = (b: string) => citeByName.get(b.trim().toLowerCase());
-                        return (
-                          <>
-                            <div className={`grid grid-cols-1 gap-7 ${hasConsumer ? "lg:grid-cols-5" : ""}`}>
-                              {/* THE OPPORTUNITY — the hero: developed concepts with Tyson fit */}
-                              {(opps.length > 0) && (
-                                <div className={hasConsumer ? "lg:col-span-3" : ""}>
-                                  <p className="flex items-center gap-2 text-[10.5px] font-bold uppercase tracking-[0.18em] text-sky-600">
-                                    <span className="h-1.5 w-1.5 rounded-full bg-sky-500" /> The opportunity
-                                  </p>
-                                  {opps.length > 0 && (
-                                    <div className="mt-3 space-y-3">
-                                      {opps.map((o, k) => {
-                                        const tier = o.tyson_fit?.tier ?? "Adjacent";
-                                        const ts = TIER_STYLE[tier] ?? TIER_STYLE.Adjacent;
-                                        const oppRefs = [...new Set((o.builds_on ?? [])
-                                          .map((b) => refFor(citeForBuild(b)))
-                                          .filter((n): n is number => n !== undefined))].sort((a, b) => a - b);
-                                        return (
-                                          <div key={k} className="rounded-xl border border-slate-200 bg-gradient-to-br from-white to-slate-50/60 p-4 shadow-sm">
-                                            <div className="flex flex-wrap items-center justify-between gap-2">
-                                              <span className="text-[15.5px] font-bold text-slate-900">
-                                                {o.name}
-                                                {oppRefs.map((n) => {
-                                                  const rc = refList[n - 1]?.cite;
-                                                  const href = rc ? citeHref(rc) : null;
-                                                  return href ? (
-                                                    <a key={n} href={href} target="_blank" rel="noreferrer"
-                                                       title={`${rc!.label || "source"}${rc!.page ? ` · p.${rc!.page}` : ""}`}
-                                                       className="ml-1 align-super text-[10.5px] font-extrabold text-sky-600 hover:text-sky-800 hover:underline">
-                                                      [{n}]
-                                                    </a>
-                                                  ) : null;
-                                                })}
-                                              </span>
-                                              <span className={`rounded px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${ts.badge}`}
-                                                    title={o.tyson_fit?.reason ?? undefined}>
-                                                {ts.icon} {tier}
-                                              </span>
-                                            </div>
-                                            <p className="mt-1.5 text-[13.5px] leading-relaxed text-slate-700">{o.concept}</p>
-                                            {o.why_now && (
-                                              <p className="mt-1.5 text-[12px] leading-relaxed text-slate-500">
-                                                <span className="font-bold text-rose-500">Why now —</span> {o.why_now}
-                                              </p>
-                                            )}
-                                            <div className="mt-2.5 flex flex-wrap items-center gap-1.5 border-t border-slate-100 pt-2.5">
-                                              {o.tyson_fit?.category && (
-                                                <span className="rounded bg-slate-900 px-2 py-0.5 text-[10.5px] font-bold uppercase tracking-wide text-white"
-                                                      title={o.tyson_fit?.reason ?? "Tyson category anchor"}>
-                                                  🐔 {o.tyson_fit.category}
-                                                </span>
-                                              )}
-                                              {o.builds_on?.map((b, bi) => (
-                                                <span key={bi} className="rounded bg-slate-100 px-1.5 py-0.5 text-[11px] font-medium text-slate-500">
-                                                  ↳ {b} <CiteLink cite={citeForBuild(b)} refNo={refFor(citeForBuild(b))} />
-                                                </span>
-                                              ))}
-                                            </div>
-                                          </div>
-                                        );
-                                      })}
+                        <div className={`grid grid-cols-1 gap-7 ${hasConsumer ? "lg:grid-cols-5" : ""}`}>
+                          {opps.length > 0 && (
+                            <div className={hasConsumer ? "lg:col-span-3" : ""}>
+                              <p className="flex items-center gap-2 text-[10.5px] font-bold uppercase tracking-[0.18em] text-sky-600">
+                                <span className="h-1.5 w-1.5 rounded-full bg-sky-500" /> The opportunity
+                              </p>
+                              <div className="mt-3 space-y-3">
+                                {opps.map((o, k) => {
+                                  const tier = o.tyson_fit?.tier ?? "Adjacent";
+                                  const ts = TIER_STYLE[tier] ?? TIER_STYLE.Adjacent;
+                                  const buildsOn = Array.isArray(o.builds_on) ? o.builds_on : [];
+                                  const oppRefs = [...new Set(buildsOn
+                                    .map((b) => refFor(citeForBuild(b)))
+                                    .filter((n): n is number => n !== undefined))].sort((a, b) => a - b);
+                                  return (
+                                    <div key={k} className="rounded-xl border border-slate-200 bg-gradient-to-br from-white to-slate-50/60 p-4 shadow-sm">
+                                      <div className="flex flex-wrap items-center justify-between gap-2">
+                                        <span className="text-[15.5px] font-bold text-slate-900">
+                                          {o.name}
+                                          {oppRefs.map((n) => {
+                                            const rc = refList[n - 1]?.cite;
+                                            const href = rc ? citeHref(rc) : null;
+                                            return href ? (
+                                              <a key={n} href={href} target="_blank" rel="noreferrer"
+                                                 title={`${rc!.label || "source"}${rc!.page ? ` · p.${rc!.page}` : ""}`}
+                                                 className="ml-1 align-super text-[10.5px] font-extrabold text-sky-600 hover:text-sky-800 hover:underline">
+                                                [{n}]
+                                              </a>
+                                            ) : null;
+                                          })}
+                                        </span>
+                                        <span className={`rounded px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${ts.badge}`}
+                                              title={o.tyson_fit?.reason ?? undefined}>
+                                          {ts.icon} {tier}
+                                        </span>
+                                      </div>
+                                      <p className="mt-1.5 text-[13.5px] leading-relaxed text-slate-700">{o.concept}</p>
+                                      {o.why_now && (
+                                        <p className="mt-1.5 text-[12px] leading-relaxed text-slate-500">
+                                          <span className="font-bold text-rose-500">Why now —</span> {o.why_now}
+                                        </p>
+                                      )}
+                                      <div className="mt-2.5 flex flex-wrap items-center gap-1.5 border-t border-slate-100 pt-2.5">
+                                        {o.tyson_fit?.category && (
+                                          <span className="rounded bg-slate-900 px-2 py-0.5 text-[10.5px] font-bold uppercase tracking-wide text-white"
+                                                title={o.tyson_fit?.reason ?? "Tyson category anchor"}>
+                                            🐔 {o.tyson_fit.category}
+                                          </span>
+                                        )}
+                                        {buildsOn.map((b, bi) => (
+                                          <span key={bi} className="rounded bg-slate-100 px-1.5 py-0.5 text-[11px] font-medium text-slate-500">
+                                            ↳ {b} <CiteLink cite={citeForBuild(b)} refNo={refFor(citeForBuild(b))} />
+                                          </span>
+                                        ))}
+                                      </div>
                                     </div>
-                                  )}
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          )}
+                          {hasConsumer && (
+                            <div className={opps.length > 0 ? "lg:col-span-2" : "lg:col-span-5"}>
+                              <p className="flex items-center gap-2 text-[10.5px] font-bold uppercase tracking-[0.18em] text-violet-600">
+                                <span className="h-1.5 w-1.5 rounded-full bg-violet-500" /> The consumer
+                              </p>
+                              {psychs.length > 0 && (
+                                <div className="mt-3">
+                                  <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">Why they do it</p>
+                                  <Bullets items={psychs} tone="text-violet-400" />
                                 </div>
                               )}
-                              {/* THE CONSUMER — supporting context */}
-                              {hasConsumer && (
-                                <div className={opps.length > 0 ? "lg:col-span-2" : "lg:col-span-5"}>
-                                  <p className="flex items-center gap-2 text-[10.5px] font-bold uppercase tracking-[0.18em] text-violet-600">
-                                    <span className="h-1.5 w-1.5 rounded-full bg-violet-500" /> The consumer
-                                  </p>
-                                  {psychs.length > 0 && (
-                                    <div className="mt-3">
-                                      <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">Why they do it</p>
-                                      <Bullets items={psychs} tone="text-violet-400" />
-                                    </div>
-                                  )}
-                                  {behs.length > 0 && (
-                                    <div className="mt-4">
-                                      <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">What people do</p>
-                                      <Bullets items={behs} tone="text-amber-500" />
-                                    </div>
-                                  )}
+                              {behs.length > 0 && (
+                                <div className="mt-4">
+                                  <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">What people do</p>
+                                  <Bullets items={behs} tone="text-amber-500" />
                                 </div>
                               )}
                             </div>
-                            {other.length > 0 && (
-                              <div className="mt-4 flex flex-wrap gap-1.5">
-                                {other.map((e, k) => (
-                                  <span key={k} className="rounded-lg bg-slate-100 px-2.5 py-1 text-[13px] text-slate-700">
-                                    {e.name} <CiteLink cite={e.cite} refNo={refFor(e.cite)} />
-                                  </span>
-                                ))}
-                              </div>
-                            )}
-                          </>
-                        );
-                      })()}
+                          )}
+                        </div>
+                        {other.length > 0 && (
+                          <div className="mt-4 flex flex-wrap gap-1.5">
+                            {other.map((e, k) => (
+                              <span key={k} className="rounded-lg bg-slate-100 px-2.5 py-1 text-[13px] text-slate-700">
+                                {e.name} <CiteLink cite={e.cite} refNo={refFor(e.cite)} />
+                              </span>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     </div>
-                    </Reveal>
-                  ))}
-                </div>
+                  );
+                })()}
               </div>
 
               {/* Key stats — dense two-column cards */}
@@ -587,40 +632,129 @@ export default function CodexPage() {
               <Reveal>
               <div id="sec-tyson" className="scroll-mt-24">
                 <SectionTitle no="06" eyebrow="From trend to action">The Tyson layer</SectionTitle>
-                <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-3">
+
+                {/* Row 1: Questions + Existing portfolio */}
+                <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
+                  {/* How might Tyson? */}
                   <div className="rounded-2xl border border-slate-200 border-t-4 border-t-amber-400 bg-white p-6 shadow-sm">
                     <p className="text-[10.5px] font-bold uppercase tracking-[0.18em] text-amber-600">How might Tyson…?</p>
                     <ul className="mt-3 space-y-2">
-                      {dossier.tyson_questions?.map((q, i) => (
-                        <li key={i} className="flex gap-2 text-[14px] leading-relaxed text-slate-800">
-                          <span className="shrink-0 font-extrabold text-amber-500">?</span>{q}
-                        </li>
-                      ))}
+                      {dossier.tyson_questions?.map((q, i) => {
+                        const text = typeof q === "string" ? q : q.question;
+                        const cite = typeof q === "string" ? undefined : (q.cite ?? undefined);
+                        const refNo = refFor(cite);
+                        return (
+                          <li key={i} className="flex gap-2 text-[14px] leading-relaxed text-slate-800">
+                            <span className="shrink-0 font-extrabold text-amber-500">?</span>
+                            <span>{text} <CiteLink cite={cite} refNo={refNo} /></span>
+                          </li>
+                        );
+                      })}
                     </ul>
                   </div>
-                  <div className="rounded-2xl border border-slate-200 border-t-4 border-t-slate-300 bg-white p-6 shadow-sm">
-                    <p className="text-[10.5px] font-bold uppercase tracking-[0.18em] text-slate-500">Concepts riding this</p>
-                    <ul className="mt-3 space-y-2">
-                      {dossier.tyson_ideas?.length ? dossier.tyson_ideas.map((it, i) => (
-                        <li key={i} className="text-[14px] leading-relaxed text-slate-800">
-                          <span className="font-bold">{it.name}</span>
-                          {it.tier && <span className="ml-1.5 rounded bg-slate-100 px-1.5 py-0.5 text-[11px] font-bold text-slate-600">{it.tier}</span>}
-                          {it.note && <span className="text-slate-500"> — {it.note}</span>}
-                        </li>
-                      )) : <li className="text-sm text-slate-400">None yet.</li>}
-                    </ul>
+
+                  {/* Already in Tyson's portfolio */}
+                  <div className="rounded-2xl border border-slate-200 border-t-4 border-t-emerald-400 bg-white p-6 shadow-sm">
+                    <p className="text-[10.5px] font-bold uppercase tracking-[0.18em] text-emerald-600">Already in Tyson&apos;s portfolio</p>
+                    <p className="mt-0.5 text-[11px] text-slate-400">Products already riding this trend</p>
+                    {dossier.tyson_portfolio?.length ? (
+                      <div className="mt-3 space-y-1">
+                        {(() => {
+                          const grouped: Record<string, string[]> = {};
+                          dossier.tyson_portfolio.forEach(p => {
+                            if (!grouped[p.brand]) grouped[p.brand] = [];
+                            grouped[p.brand].push(p.name);
+                          });
+                          return Object.entries(grouped).map(([brand, products]) => (
+                            <div key={brand} className="py-1.5 border-b border-slate-100 last:border-0">
+                              <p className="text-[10.5px] font-bold uppercase tracking-[0.12em] text-emerald-700">{brand}</p>
+                              <ul className="mt-1 space-y-0.5">
+                                {products.map((name, j) => (
+                                  <li key={j} className="text-[13px] leading-relaxed text-slate-700">— {name}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          ));
+                        })()}
+                      </div>
+                    ) : (
+                      <p className="mt-3 text-sm text-slate-400">No existing products mapped yet.</p>
+                    )}
                   </div>
-                  <div className="rounded-2xl border border-slate-200 border-t-4 border-t-indigo-400 bg-white p-6 shadow-sm">
-                    <p className="text-[10.5px] font-bold uppercase tracking-[0.18em] text-indigo-600">White space inside this</p>
-                    <ul className="mt-3 space-y-2">
-                      {dossier.whitespace?.length ? dossier.whitespace.map((w, i) => (
-                        <li key={i} className="text-[14px] leading-relaxed text-slate-800">
-                          <span className="font-bold">{w.name}</span> <CiteLink cite={w.cite} refNo={refFor(w.cite)} />
-                          {w.note && <span className="text-slate-500"> — {w.note}</span>}
-                        </li>
-                      )) : <li className="text-sm text-slate-400">No scout finds attached.</li>}
-                    </ul>
-                  </div>
+                </div>
+
+                {/* Row 2: White space + new concepts — full-width card grid */}
+                <div className="mt-4 rounded-2xl border border-slate-200 border-t-4 border-t-indigo-400 bg-white p-6 shadow-sm">
+                  <p className="text-[10.5px] font-bold uppercase tracking-[0.18em] text-indigo-600">White space &amp; new concepts</p>
+                  <p className="mt-0.5 text-[11px] text-slate-400">Market gaps and net-new Tyson concept ideas — territory nobody has claimed yet</p>
+                  {(() => {
+                    const wsItems = (dossier.whitespace ?? []).map(w => ({ _kind: "gap" as const, ...w }));
+                    const conceptItems = (dossier.tyson_ideas ?? [])
+                      .filter(it => it.tier !== "Core")
+                      .map(it => ({ _kind: "concept" as const, ...it }));
+                    const combined = [...wsItems, ...conceptItems];
+                    if (!combined.length) return <p className="mt-3 text-sm text-slate-400">No white space mapped yet.</p>;
+                    return (
+                      <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
+                        {combined.map((item, i) => {
+                          if (item._kind === "gap") {
+                            const w = item as typeof wsItems[0];
+                            return (
+                              <div key={i} className="flex flex-col gap-2 rounded-xl border border-indigo-100 bg-indigo-50 p-4">
+                                <div className="flex items-start justify-between gap-2">
+                                  <span className="text-[14px] font-bold leading-snug text-slate-900">{w.name}</span>
+                                  <span className="shrink-0 rounded-full bg-indigo-100 px-2 py-0.5 text-[10px] font-bold text-indigo-700">Market gap</span>
+                                </div>
+                                {w.note && <p className="text-[13px] leading-relaxed text-slate-600">{w.note}</p>}
+                                {w.cite && (
+                                  <div className="mt-auto pt-1">
+                                    <CiteLink cite={w.cite} refNo={refFor(w.cite)} />
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          } else {
+                            const it = item as typeof conceptItems[0];
+                            const tierStyle = it.tier ? TIER_STYLE[it.tier] : null;
+                            const valColor = it.validation === "Strong" ? "bg-emerald-100 text-emerald-700"
+                              : it.validation === "Moderate" ? "bg-amber-100 text-amber-700"
+                              : "bg-slate-100 text-slate-500";
+                            return (
+                              <div key={i} className="flex flex-col gap-2 rounded-xl border border-violet-100 bg-violet-50 p-4">
+                                <div className="flex items-start justify-between gap-2">
+                                  <span className="text-[14px] font-bold leading-snug text-slate-900">{it.name}</span>
+                                  <div className="flex shrink-0 flex-wrap justify-end gap-1">
+                                    {tierStyle && (
+                                      <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${tierStyle.badge}`}>
+                                        {tierStyle.icon} {it.tier}
+                                      </span>
+                                    )}
+                                    {it.validation && (
+                                      <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${valColor}`}>
+                                        {it.validation}
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                                {it.brand && <span className="text-[11px] font-semibold text-slate-500">{it.brand}</span>}
+                                {it.note && <p className="text-[13px] leading-relaxed text-slate-600">{it.note}</p>}
+                                <div className="flex flex-wrap items-center gap-1.5">
+                                  {it.format && <span className="rounded bg-white border border-violet-200 px-1.5 py-0.5 text-[11px] text-slate-600">{it.format}</span>}
+                                  {it.occasion && <span className="rounded bg-white border border-violet-200 px-1.5 py-0.5 text-[11px] text-slate-600">{it.occasion}</span>}
+                                </div>
+                                {it.subtrend && <p className="text-[11px] italic text-violet-600">↑ rides: {it.subtrend}</p>}
+                                {it.cites && it.cites.length > 0 && (
+                                  <div className="mt-auto flex flex-wrap gap-1 pt-1">
+                                    {it.cites.map((c, ci) => <CiteLink key={ci} cite={c} />)}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          }
+                        })}
+                      </div>
+                    );
+                  })()}
                 </div>
               </div>
               </Reveal>
@@ -683,6 +817,7 @@ export default function CodexPage() {
             </div>
         </div>
       )}
+      </div>{/* ml-[220px] content wrapper */}
     </div>
   );
 }
