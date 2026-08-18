@@ -51,7 +51,7 @@ export default function ReportsPage() {
       if (!res.ok) throw new Error(data.error || "Upload failed");
       if (fileRef.current) fileRef.current.value = "";
       if (data.status === "updating") {
-        setInfo(`"${data.filename}" already exists — updating it in place (re-processes only if the content changed).`);
+        setInfo(`"${data.filename}" already exists; updating it in place (re-processes only if the content changed).`);
       }
       setReports((prev) => [
         {
@@ -110,7 +110,7 @@ export default function ReportsPage() {
         ) : reports.length === 0 ? (
           <div className="p-12 text-center text-slate-500">
             <div className="mb-2 text-3xl">▣</div>
-            No reports yet — upload a PPTX or PDF to begin.
+            No reports yet. Upload a PPTX or PDF to begin.
           </div>
         ) : (
           <div className="divide-y divide-slate-200">

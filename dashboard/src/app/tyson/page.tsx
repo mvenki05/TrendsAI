@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { PageHeader } from "@/components/page-header";
 
 interface Theme {
   theme_id: string;
@@ -80,39 +81,28 @@ export default function TysonInsightsPage() {
   const totalQuestions = themes.reduce((a, t) => a + parseList(t.tyson_questions).length, 0);
 
   return (
-    <div className="space-y-5 p-6 lg:p-8">
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900">🐔 Tyson Bites — Combined Insights</h1>
-        <p className="mt-1 max-w-3xl text-sm text-slate-500">
-          One synthesized view across all monthly digests (Bites Summaries, Hartman &amp; Mintel Quick Insights,
-          social-media editions). Insights are clustered into themes across months and sources — persistence and
-          corroboration are the signal — with every survey stat and &quot;How might Tyson…?&quot; question preserved.
-        </p>
-      </div>
+    <div>
+      <PageHeader
+        title="Tyson Bites: Combined Insights"
+        description="One synthesized view across all monthly digests. Insights are clustered into themes by persistence and corroboration, with every survey stat and Tyson question bank preserved."
+        img="/subtrends/protein-1.png"
+        badge="Proprietary Intelligence"
+        stats={themes.length > 0 ? [
+          { value: themes.length, label: "combined themes" },
+          { value: cards.length, label: "insight cards" },
+          { value: totalQuestions, label: "Tyson questions" },
+        ] : undefined}
+      />
 
+      <div className="mx-auto max-w-7xl space-y-5 p-6 lg:p-8">
       {loading ? (
-        <div className="py-12 text-center text-slate-400">Loading…</div>
+        <div className="py-16 text-center text-slate-400">Loading…</div>
       ) : themes.length === 0 ? (
-        <div className="rounded-xl border border-slate-200 bg-white p-12 text-center text-slate-400">
-          No combined insights yet — cards are extracted but themes haven&apos;t been clustered.
+        <div className="rounded-2xl border border-slate-100 bg-white p-16 text-center shadow-[0_4px_24px_rgba(0,0,0,0.07)]">
+          <p className="text-slate-400">No combined insights yet. Cards are extracted but themes haven&apos;t been clustered.</p>
         </div>
       ) : (
         <>
-          <div className="flex flex-wrap gap-3">
-            <div className="flex-1 rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-3 text-indigo-700 shadow-sm">
-              <div className="text-2xl font-bold tabular-nums">{themes.length}</div>
-              <div className="text-xs font-medium opacity-80">combined themes</div>
-            </div>
-            <div className="flex-1 rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
-              <div className="text-2xl font-bold tabular-nums text-slate-900">{cards.length}</div>
-              <div className="text-xs font-medium text-slate-500">insight cards across all digests</div>
-            </div>
-            <div className="flex-1 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-amber-700 shadow-sm">
-              <div className="text-2xl font-bold tabular-nums">{totalQuestions}</div>
-              <div className="text-xs font-medium opacity-80">&quot;How might Tyson…?&quot; questions</div>
-            </div>
-          </div>
-
           <div className="space-y-4">
             {themes.map((t, i) => {
               const months = parseList(t.months);
@@ -121,12 +111,15 @@ export default function TysonInsightsPage() {
               const questions = parseList(t.tyson_questions);
               const members = cards.filter((c) => c.theme === t.name);
               const isOpen = open.has(t.theme_id);
+              const accent = ACCENT[i % ACCENT.length];
               return (
-                <div key={t.theme_id} className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-                  <div className={`h-1 w-full ${ACCENT[i % ACCENT.length]}`} />
+                <div key={t.theme_id} className="overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-[0_4px_24px_rgba(0,0,0,0.07)]">
                   <div className="px-6 pt-5 pb-4">
                     <div className="flex flex-wrap items-start justify-between gap-3">
-                      <h2 className="text-lg font-bold leading-snug text-slate-900">{t.name}</h2>
+                      <div className="flex items-center gap-2.5">
+                        <span className={`h-2 w-2 shrink-0 rounded-full ${accent}`} />
+                        <h2 className="font-display text-lg font-semibold leading-snug text-slate-900">{t.name}</h2>
+                      </div>
                       <div className="flex flex-wrap gap-1.5">
                         <span className="rounded-full bg-indigo-100 px-2.5 py-0.5 text-xs font-bold text-indigo-700"
                               title="How many of the 7 months this theme appeared in — persistence is the signal">
@@ -166,7 +159,7 @@ export default function TysonInsightsPage() {
                       )}
                     </div>
                     <div className="p-5">
-                      <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-amber-500">Now what — the Tyson question bank</p>
+                      <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-amber-500">Now what: The Tyson question bank</p>
                       {questions.length === 0 ? (
                         <p className="text-xs text-slate-400">No strategic questions captured for this theme.</p>
                       ) : (
@@ -229,6 +222,7 @@ export default function TysonInsightsPage() {
           </p>
         </>
       )}
+      </div>
     </div>
   );
 }

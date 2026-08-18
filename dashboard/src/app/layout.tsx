@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
-import { Outfit, Fira_Code, Fraunces } from "next/font/google";
+import { Inter, Fira_Code, Fraunces } from "next/font/google";
 import { ClientShell } from "@/components/client-shell";
 import "./globals.css";
 
-const outfit = Outfit({
-  variable: "--font-outfit",
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
 });
 
@@ -20,7 +20,7 @@ const fraunces = Fraunces({
 });
 
 export const metadata: Metadata = {
-  title: "TrendLens — Upload-Driven Trend Intelligence",
+  title: "TrendLens: Trend Intelligence",
   description: "Upload a report, extract its megatrend taxonomy, and measure what's growing in Google Trends",
 };
 
@@ -30,7 +30,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${outfit.variable} ${firaCode.variable} ${fraunces.variable}`}>
+    <html lang="en" className={`${inter.variable} ${firaCode.variable} ${fraunces.variable}`}>
       <body className="antialiased bg-[#FAF9F6] text-slate-900">
         <ClientShell>{children}</ClientShell>
       </body>

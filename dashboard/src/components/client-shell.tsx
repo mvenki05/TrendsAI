@@ -1,15 +1,16 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { Sidebar } from "./sidebar";
+import { TopNav } from "./top-nav";
 
 export function ClientShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const noShell = pathname === "/" || pathname.startsWith("/best");
+  const isHome = pathname === "/";
+
   return (
     <>
-      {!noShell && <Sidebar />}
-      <div className={noShell ? "min-h-screen" : "ml-56 min-h-screen"}>
+      {!isHome && <TopNav />}
+      <div className={isHome ? "min-h-screen" : "min-h-screen pt-12"}>
         {children}
       </div>
     </>

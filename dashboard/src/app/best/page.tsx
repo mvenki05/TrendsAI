@@ -61,7 +61,8 @@ interface Dossier {
   horizons: Record<"short" | "medium" | "long", { title: string; detail: string; rationale: string; cite?: Cite }[]>;
   demand: { summary: string; risers: { term: string; yoy: number }[]; decliners: { term: string; yoy: number }[] };
   tyson_questions: (string | { question: string; cite?: Cite | null })[];
-  tyson_ideas: { name: string; brand?: string; tier?: string; note?: string }[];
+  tyson_portfolio: { brand: string; name: string }[];
+  tyson_ideas: { name: string; brand?: string; tier?: string; format?: string; occasion?: string; note?: string; validation?: string; subtrend?: string; cites?: Cite[] }[];
   whitespace: { name: string; note?: string; cite?: Cite }[];
   sources: { kind: string; report_id?: string; label: string; source_tag?: string }[];
 }
@@ -183,7 +184,11 @@ export default function CodexPage() {
   const carouselRef = useRef<HTMLDivElement>(null);
 
   // Reset subtrend selection when switching megatrends
-  useEffect(() => { setSelectedSub(0); }, [selected]);
+  useEffect(() => {
+    setSelectedSub(0);
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+  }, [selected]);
 
   const jumpToSubtrend = (i: number) => {
     setSelectedSub(i);
@@ -257,55 +262,66 @@ export default function CodexPage() {
   const theme = THEME[selected ?? ""] ?? { dot: "bg-slate-500", grad: "from-slate-700 to-slate-500", ring: "ring-slate-200" };
 
   return (
-    <div className="flex min-h-screen overflow-x-hidden">
+    <div className="flex min-h-screen">
       {/* ── Built-in megatrend selector panel ───────────────────── */}
-      <aside className="fixed left-0 top-0 z-10 flex h-full w-[220px] flex-col border-r border-slate-200 bg-[#FAF9F6]">
-        {/* Logo / home link */}
-        <Link href="/" className="flex items-center gap-2.5 border-b border-slate-100 px-4 py-4 transition hover:bg-slate-50">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-emerald-500 to-sky-600 text-sm font-bold text-white shadow-sm">
-            T
-          </div>
-          <div className="min-w-0">
-            <div className="font-display text-[15px] font-semibold tracking-tight text-slate-900">TrendLens</div>
-            <div className="text-[9.5px] font-medium uppercase tracking-[0.16em] text-slate-400">Megatrends</div>
-          </div>
-        </Link>
-
+      <aside className="fixed left-0 top-12 z-10 flex h-[calc(100vh-3rem)] w-[220px] flex-col border-r border-slate-200 bg-[#FAF9F6]">
         {/* Megatrend image cards */}
-        <div className="flex-1 overflow-y-auto p-2.5 space-y-2">
+        <div className="flex-1 overflow-y-auto p-2.5 space-y-2 [&::-webkit-scrollbar]:hidden [scrollbar-width:none]">
           {rows.map((r) => {
             const isActive = selected === r.key;
             return (
-              <button
-                key={r.key}
-                onClick={() => { setSelected(r.key); setFlash(null); }}
-                className={`group relative w-full overflow-hidden rounded-xl text-left transition ${
-                  isActive
-                    ? "ring-2 ring-slate-900 shadow-md"
-                    : "border border-slate-200 shadow-sm hover:shadow-md hover:border-slate-300"
-                }`}
-              >
-                <div className="relative h-[72px]">
-                  <Image
-                    src={`/megatrends/${r.key}.png`}
-                    alt={r.name}
-                    fill
-                    className="object-cover transition duration-300 group-hover:scale-105"
-                    sizes="196px"
-                  />
-                  <div className={`absolute inset-0 bg-gradient-to-t ${isActive ? "from-black/80 via-black/40" : "from-black/65 via-black/20"} to-transparent`} />
-                  <span className={`absolute bottom-2.5 left-3 right-3 text-[11.5px] font-semibold leading-tight text-white line-clamp-2`}>
-                    {r.name}
-                  </span>
-                </div>
-              </button>
+              <div key={r.key}>
+                <button
+                  onClick={() => { setSelected(r.key); setFlash(null); }}
+                  className={`group relative w-full overflow-hidden rounded-xl text-left transition ${
+                    isActive
+                      ? "ring-2 ring-slate-900 shadow-md"
+                      : "border border-slate-200 shadow-sm hover:shadow-md hover:border-slate-300"
+                  }`}
+                >
+                  <div className="relative h-[72px]">
+                    <Image
+                      src={`/megatrends/${r.key}.png`}
+                      alt={r.name}
+                      fill
+                      className="object-cover transition duration-300 group-hover:scale-105"
+                      sizes="196px"
+                    />
+                    <div className={`absolute inset-0 bg-gradient-to-t ${isActive ? "from-black/80 via-black/40" : "from-black/65 via-black/20"} to-transparent`} />
+                    <span className="absolute bottom-2.5 left-3 right-3 text-[11.5px] font-semibold leading-tight text-white line-clamp-2">
+                      {r.name}
+                    </span>
+                  </div>
+                </button>
+
+                {/* Section links — expand below the active card */}
+                {isActive && (
+                  <div className="space-y-0.5 px-1 pb-1">
+                    {[
+                      { id: "sec-now",       label: "What's happening now" },
+                      { id: "sec-horizons",  label: "Horizons" },
+                      { id: "sec-subtrends", label: "Subtrends" },
+                      { id: "sec-stats",     label: "Key Stats" },
+                      { id: "sec-tyson",     label: "Tyson Layer" },
+                      { id: "sec-sources",   label: "Sources" },
+                    ].map(({ id, label }) => (
+                      <button key={id}
+                        onClick={() => document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" })}
+                        className="flex w-full items-center gap-2 rounded-lg px-3 py-1.5 text-left text-[12px] font-medium text-slate-500 transition hover:bg-slate-100 hover:text-slate-900">
+                        <span className="h-1 w-1 flex-shrink-0 rounded-full bg-slate-600" />
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
             );
           })}
         </div>
       </aside>
 
       {/* ── Dossier content ─────────────────────────────────────── */}
-      <div className="ml-[220px] min-w-0 flex-1 overflow-x-hidden">
+      <div className="ml-[220px] min-w-0 flex-1">
       {dossier && presenting && (
         <PresentMode dossier={dossier} imageSrc={`/megatrends/${selected}.png`}
                      rank={row?.rank} total={rows.length} onClose={() => setPresenting(false)} />
@@ -616,7 +632,10 @@ export default function CodexPage() {
               <Reveal>
               <div id="sec-tyson" className="scroll-mt-24">
                 <SectionTitle no="06" eyebrow="From trend to action">The Tyson layer</SectionTitle>
-                <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-3">
+
+                {/* Row 1: Questions + Existing portfolio */}
+                <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
+                  {/* How might Tyson? */}
                   <div className="rounded-2xl border border-slate-200 border-t-4 border-t-amber-400 bg-white p-6 shadow-sm">
                     <p className="text-[10.5px] font-bold uppercase tracking-[0.18em] text-amber-600">How might Tyson…?</p>
                     <ul className="mt-3 space-y-2">
@@ -633,29 +652,109 @@ export default function CodexPage() {
                       })}
                     </ul>
                   </div>
-                  <div className="rounded-2xl border border-slate-200 border-t-4 border-t-slate-300 bg-white p-6 shadow-sm">
-                    <p className="text-[10.5px] font-bold uppercase tracking-[0.18em] text-slate-500">Concepts riding this</p>
-                    <ul className="mt-3 space-y-2">
-                      {dossier.tyson_ideas?.length ? dossier.tyson_ideas.map((it, i) => (
-                        <li key={i} className="text-[14px] leading-relaxed text-slate-800">
-                          <span className="font-bold">{it.name}</span>
-                          {it.tier && <span className="ml-1.5 rounded bg-slate-100 px-1.5 py-0.5 text-[11px] font-bold text-slate-600">{it.tier}</span>}
-                          {it.note && <span className="text-slate-500"> — {it.note}</span>}
-                        </li>
-                      )) : <li className="text-sm text-slate-400">None yet.</li>}
-                    </ul>
+
+                  {/* Already in Tyson's portfolio */}
+                  <div className="rounded-2xl border border-slate-200 border-t-4 border-t-emerald-400 bg-white p-6 shadow-sm">
+                    <p className="text-[10.5px] font-bold uppercase tracking-[0.18em] text-emerald-600">Already in Tyson&apos;s portfolio</p>
+                    <p className="mt-0.5 text-[11px] text-slate-400">Products already riding this trend</p>
+                    {dossier.tyson_portfolio?.length ? (
+                      <div className="mt-3 space-y-1">
+                        {(() => {
+                          const grouped: Record<string, string[]> = {};
+                          dossier.tyson_portfolio.forEach(p => {
+                            if (!grouped[p.brand]) grouped[p.brand] = [];
+                            grouped[p.brand].push(p.name);
+                          });
+                          return Object.entries(grouped).map(([brand, products]) => (
+                            <div key={brand} className="py-1.5 border-b border-slate-100 last:border-0">
+                              <p className="text-[10.5px] font-bold uppercase tracking-[0.12em] text-emerald-700">{brand}</p>
+                              <ul className="mt-1 space-y-0.5">
+                                {products.map((name, j) => (
+                                  <li key={j} className="text-[13px] leading-relaxed text-slate-700">— {name}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          ));
+                        })()}
+                      </div>
+                    ) : (
+                      <p className="mt-3 text-sm text-slate-400">No existing products mapped yet.</p>
+                    )}
                   </div>
-                  <div className="rounded-2xl border border-slate-200 border-t-4 border-t-indigo-400 bg-white p-6 shadow-sm">
-                    <p className="text-[10.5px] font-bold uppercase tracking-[0.18em] text-indigo-600">White space inside this</p>
-                    <ul className="mt-3 space-y-2">
-                      {dossier.whitespace?.length ? dossier.whitespace.map((w, i) => (
-                        <li key={i} className="text-[14px] leading-relaxed text-slate-800">
-                          <span className="font-bold">{w.name}</span> <CiteLink cite={w.cite} refNo={refFor(w.cite)} />
-                          {w.note && <span className="text-slate-500"> — {w.note}</span>}
-                        </li>
-                      )) : <li className="text-sm text-slate-400">No scout finds attached.</li>}
-                    </ul>
-                  </div>
+                </div>
+
+                {/* Row 2: White space + new concepts — full-width card grid */}
+                <div className="mt-4 rounded-2xl border border-slate-200 border-t-4 border-t-indigo-400 bg-white p-6 shadow-sm">
+                  <p className="text-[10.5px] font-bold uppercase tracking-[0.18em] text-indigo-600">White space &amp; new concepts</p>
+                  <p className="mt-0.5 text-[11px] text-slate-400">Market gaps and net-new Tyson concept ideas — territory nobody has claimed yet</p>
+                  {(() => {
+                    const wsItems = (dossier.whitespace ?? []).map(w => ({ _kind: "gap" as const, ...w }));
+                    const conceptItems = (dossier.tyson_ideas ?? [])
+                      .filter(it => it.tier !== "Core")
+                      .map(it => ({ _kind: "concept" as const, ...it }));
+                    const combined = [...wsItems, ...conceptItems];
+                    if (!combined.length) return <p className="mt-3 text-sm text-slate-400">No white space mapped yet.</p>;
+                    return (
+                      <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
+                        {combined.map((item, i) => {
+                          if (item._kind === "gap") {
+                            const w = item as typeof wsItems[0];
+                            return (
+                              <div key={i} className="flex flex-col gap-2 rounded-xl border border-indigo-100 bg-indigo-50 p-4">
+                                <div className="flex items-start justify-between gap-2">
+                                  <span className="text-[14px] font-bold leading-snug text-slate-900">{w.name}</span>
+                                  <span className="shrink-0 rounded-full bg-indigo-100 px-2 py-0.5 text-[10px] font-bold text-indigo-700">Market gap</span>
+                                </div>
+                                {w.note && <p className="text-[13px] leading-relaxed text-slate-600">{w.note}</p>}
+                                {w.cite && (
+                                  <div className="mt-auto pt-1">
+                                    <CiteLink cite={w.cite} refNo={refFor(w.cite)} />
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          } else {
+                            const it = item as typeof conceptItems[0];
+                            const tierStyle = it.tier ? TIER_STYLE[it.tier] : null;
+                            const valColor = it.validation === "Strong" ? "bg-emerald-100 text-emerald-700"
+                              : it.validation === "Moderate" ? "bg-amber-100 text-amber-700"
+                              : "bg-slate-100 text-slate-500";
+                            return (
+                              <div key={i} className="flex flex-col gap-2 rounded-xl border border-violet-100 bg-violet-50 p-4">
+                                <div className="flex items-start justify-between gap-2">
+                                  <span className="text-[14px] font-bold leading-snug text-slate-900">{it.name}</span>
+                                  <div className="flex shrink-0 flex-wrap justify-end gap-1">
+                                    {tierStyle && (
+                                      <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${tierStyle.badge}`}>
+                                        {tierStyle.icon} {it.tier}
+                                      </span>
+                                    )}
+                                    {it.validation && (
+                                      <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${valColor}`}>
+                                        {it.validation}
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                                {it.brand && <span className="text-[11px] font-semibold text-slate-500">{it.brand}</span>}
+                                {it.note && <p className="text-[13px] leading-relaxed text-slate-600">{it.note}</p>}
+                                <div className="flex flex-wrap items-center gap-1.5">
+                                  {it.format && <span className="rounded bg-white border border-violet-200 px-1.5 py-0.5 text-[11px] text-slate-600">{it.format}</span>}
+                                  {it.occasion && <span className="rounded bg-white border border-violet-200 px-1.5 py-0.5 text-[11px] text-slate-600">{it.occasion}</span>}
+                                </div>
+                                {it.subtrend && <p className="text-[11px] italic text-violet-600">↑ rides: {it.subtrend}</p>}
+                                {it.cites && it.cites.length > 0 && (
+                                  <div className="mt-auto flex flex-wrap gap-1 pt-1">
+                                    {it.cites.map((c, ci) => <CiteLink key={ci} cite={c} />)}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          }
+                        })}
+                      </div>
+                    );
+                  })()}
                 </div>
               </div>
               </Reveal>

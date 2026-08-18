@@ -256,7 +256,7 @@ export default function ReportPage() {
                   <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
                     <TrendChart
                       series={roll.series}
-                      title={`${activeSt.name} — theme momentum`}
+                      title={`${activeSt.name}: theme momentum`}
                       yoy={roll.yoy}
                       current={roll.current}
                       note={`Composite · avg of ${roll.count} measured items · 0–100`}
@@ -264,15 +264,15 @@ export default function ReportPage() {
                   </div>
                 ) : (
                   <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-4 text-center text-xs text-slate-500">
-                    No measured items yet for this subtrend — hit “Measure Google Trends” above.
+                    No measured items yet for this subtrend. Hit “Measure Google Trends” above.
                   </div>
                 );
               })()}
 
-              <LeafBlock label="What to make — products" hint="click a product for its Google Trends"
+              <LeafBlock label="What to make: products" hint="click a product for its Google Trends"
                 expandable weeks={periodWeeks}
                 leaves={orderLeaves(childrenOf(activeSt.node_id, "product"))} searchByNode={searchByNode} />
-              <LeafBlock label="What's in it — ingredients" hint="click an ingredient for its Google Trends"
+              <LeafBlock label="What's in it: ingredients" hint="click an ingredient for its Google Trends"
                 expandable weeks={periodWeeks}
                 leaves={orderLeaves(childrenOf(activeSt.node_id, "ingredient"))} searchByNode={searchByNode} />
 
@@ -337,7 +337,7 @@ function LeafBlock({
                     <TrendChart series={series} title={n.search_term || n.name} yoy={st.yoy} current={st.current} />
                   ) : (
                     <div className="py-6 text-center text-xs text-slate-500">
-                      No Google Trends data yet — hit “Measure Google Trends” above.
+                      No Google Trends data yet. Hit “Measure Google Trends” above.
                     </div>
                   )}
                 </div>
@@ -429,7 +429,7 @@ function TrendChart({ series, title, yoy, current, note }: { series: number[]; t
             <Tooltip
               contentStyle={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: 8, fontSize: 12 }}
               labelStyle={{ color: "#64748b" }} itemStyle={{ color: "#059669" }}
-              formatter={(v: number) => [v, "interest"]}
+              formatter={(v) => [v, "interest"]}
             />
             <Line type="monotone" dataKey="v" stroke="#059669" strokeWidth={2} dot={false} />
           </LineChart>

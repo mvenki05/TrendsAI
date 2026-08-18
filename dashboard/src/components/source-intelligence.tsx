@@ -194,7 +194,7 @@ export default function SourceIntelligence({ tag, icon, title, blurb }: {
 
           <p className="text-xs text-slate-500">
             ▲ = rising on Google Trends (fills in as measurement runs) · every node was extracted strictly from the
-            report text — survey percentages are preserved in descriptions.
+            report text; survey percentages are preserved in descriptions.
           </p>
         </>
       )}

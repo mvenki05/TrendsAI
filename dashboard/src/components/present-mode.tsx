@@ -23,7 +23,7 @@ export interface PresentDossier {
     evidence: { level: string; name: string; detail?: string }[] }[];
   horizons: Record<"short" | "medium" | "long", { title: string; detail: string }[]>;
   demand: { summary: string; risers: { term: string; yoy: number }[]; decliners: { term: string; yoy: number }[] };
-  tyson_questions: string[];
+  tyson_questions: (string | { question: string; cite?: Cite | null })[];
   whitespace: { name: string; note?: string }[];
 }
 
@@ -82,14 +82,13 @@ export function PresentMode({ dossier, imageSrc, rank, total, onClose }: {
     el?.scrollIntoView({ behavior: "smooth" });
   }, []);
 
-  // Scroll lock + keyboard (registered once; uses activeRef to avoid re-binding).
-  // Lock BOTH html and body: in this app the document scroller is <html>, and its
-  // scrollbar would otherwise shrink the viewport under the fixed overlay.
+  // Scroll lock + keyboard + focus (registered once; uses activeRef to avoid re-binding).
   useEffect(() => {
     const prevBody = document.body.style.overflow;
-    const prevHtml = document.documentElement.style.overflow;
     document.body.style.overflow = "hidden";
-    document.documentElement.style.overflow = "hidden";
+    // Focus the container so wheel events reach it naturally (setting overflow on <html>
+    // causes Chrome to swallow wheel events before they reach inner scroll containers).
+    containerRef.current?.focus();
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") { onClose(); return; }
       if (["ArrowDown", "ArrowRight", "PageDown", " "].includes(e.key)) {
@@ -104,10 +103,26 @@ export function PresentMode({ dossier, imageSrc, rank, total, onClose }: {
     window.addEventListener("keydown", onKey);
     return () => {
       document.body.style.overflow = prevBody;
-      document.documentElement.style.overflow = prevHtml;
       window.removeEventListener("keydown", onKey);
     };
   }, [goTo, onClose, slideCount]);
+
+  // Trackpad/wheel navigation — throttled so one swipe = one slide.
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+    let locked = false;
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      if (locked) return;
+      locked = true;
+      if (e.deltaY > 0) goTo(Math.min(activeRef.current + 1, slideCount - 1));
+      else if (e.deltaY < 0) goTo(Math.max(activeRef.current - 1, 0));
+      setTimeout(() => { locked = false; }, 800);
+    };
+    container.addEventListener("wheel", onWheel, { passive: false });
+    return () => container.removeEventListener("wheel", onWheel);
+  }, [goTo, slideCount]);
 
   // Track which slide fills the viewport.
   useEffect(() => {
@@ -306,7 +321,8 @@ export function PresentMode({ dossier, imageSrc, rank, total, onClose }: {
                 <ul className="mt-3 space-y-2.5">
                   {(dossier.tyson_questions ?? []).slice(0, 5).map((q, k) => (
                     <li key={k} className="flex gap-2 text-[14px] leading-relaxed text-white/80">
-                      <span className="shrink-0 font-extrabold text-amber-300">?</span>{q}
+                      <span className="shrink-0 font-extrabold text-amber-300">?</span>
+                      {typeof q === "string" ? q : (q as { question: string }).question}
                     </li>
                   ))}
                 </ul>
@@ -319,7 +335,7 @@ export function PresentMode({ dossier, imageSrc, rank, total, onClose }: {
                   {(dossier.whitespace ?? []).slice(0, 5).map((w, k) => (
                     <li key={k} className="text-[14px] leading-relaxed text-white/80">
                       <span className="font-bold">{w.name}</span>
-                      {w.note && <span className="text-white/50"> — {w.note}</span>}
+                      {w.note && <span className="text-white/50">, {w.note}</span>}
                     </li>
                   ))}
                 </ul>
@@ -375,7 +391,7 @@ export function PresentMode({ dossier, imageSrc, rank, total, onClose }: {
         ))}
       </div>
 
-      <div ref={containerRef} className="h-full w-full snap-y snap-mandatory overflow-y-auto">
+      <div ref={containerRef} tabIndex={-1} className="h-full w-full snap-y snap-mandatory overflow-y-auto outline-none">
         {slides}
       </div>
     </div>

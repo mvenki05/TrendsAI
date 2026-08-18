@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { PageHeader } from "@/components/page-header";
 
 interface WhiteSpaceIdea {
   idea_id: string;
@@ -96,7 +97,7 @@ const CLS_STYLE: Record<string, string> = {
 };
 
 function DemandRow({ idea }: { idea: WhiteSpaceIdea }) {
-  if (idea.has_data == null) return null; // not validated yet
+  if (idea.has_data == null) return null;
   const series = parseNames(idea.interest_series).map(Number).filter((v) => !Number.isNaN(v));
   return (
     <div className="mt-2 flex items-center justify-between gap-2 rounded-lg bg-slate-50 px-2.5 py-1.5">
@@ -122,7 +123,7 @@ function DemandRow({ idea }: { idea: WhiteSpaceIdea }) {
 function SubtrendCard({ s }: { s: Subtrend }) {
   const members = parseNames(s.idea_names);
   return (
-    <div className="flex flex-col rounded-xl border border-indigo-200 bg-white p-4 shadow-sm">
+    <div className="flex flex-col rounded-xl border border-indigo-100 bg-white p-4 shadow-[0_2px_12px_rgba(0,0,0,0.06)]">
       <div className="flex items-start justify-between gap-2">
         <div className="font-semibold leading-snug text-slate-900">{s.name}</div>
         {s.maps_to_megatrend ? (
@@ -169,7 +170,7 @@ function noveltyTone(score: number | null): string {
 function IdeaCard({ idea }: { idea: WhiteSpaceIdea }) {
   const sources = parseSources(idea.sources);
   return (
-    <div className="flex flex-col rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md">
+    <div className="flex flex-col rounded-xl border border-slate-100 bg-white p-4 shadow-[0_2px_12px_rgba(0,0,0,0.06)] transition-shadow hover:shadow-[0_4px_20px_rgba(0,0,0,0.10)]">
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 text-base font-semibold leading-snug text-slate-900">{idea.name}</div>
         <span className={`shrink-0 rounded px-2 py-0.5 text-xs font-bold tabular-nums ${noveltyTone(idea.novelty_score)}`}
@@ -273,83 +274,75 @@ export default function LabPage() {
   const runDate = ideas[0]?.created_at ? new Date(ideas[0].created_at).toLocaleString() : null;
 
   return (
-    <div className="space-y-5 p-6 lg:p-8">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">🔭 White Space Scout</h1>
-          <p className="mt-1 max-w-3xl text-sm text-slate-500">
-            New formats, dishes, and occasion plays from around the world that land in <strong>Tyson&apos;s real product
-            categories</strong> — but that nothing in the decks, discovery, or the ideas pipeline tracks yet. Two gates:
-            new to the system, and anchored to a category Tyson actually runs.
-          </p>
-          {runDate && <p className="mt-1 text-xs text-slate-400">Last scout run: {runDate}</p>}
-        </div>
-        <div className="flex items-center gap-2">
-          <button onClick={load}
-                  className="rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50">
-            Refresh
-          </button>
-          <button onClick={runScout} disabled={running}
-                  className="rounded-lg bg-slate-900 px-3.5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-slate-700 disabled:opacity-50">
-            {running ? "Scouting… (10–20 min, refresh later)" : "▶ Run Scout"}
-          </button>
-        </div>
+    <div>
+      <PageHeader
+        title="White Space Scout"
+        description="Novel ideas from the open internet, anchored to Tyson's real product categories. Novelty-gated and demand-validated."
+        img="/subtrends/convenience-4.png"
+        badge="Innovation Intelligence"
+        stats={ideas.length > 0 ? [
+          { value: ideas.length, label: "surprising finds" },
+          { value: buildableCount, label: "with a Tyson angle" },
+        ] : undefined}
+        actions={
+          <div className="flex items-center gap-2">
+            <button onClick={load} className="rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm font-medium text-white backdrop-blur-sm hover:bg-white/20">
+              Refresh
+            </button>
+            <button onClick={runScout} disabled={running}
+              className="rounded-full bg-white px-4 py-2 text-sm font-semibold text-slate-900 shadow-sm hover:bg-slate-100 disabled:opacity-50">
+              {running ? "Scouting… (10–20 min, refresh later)" : "▶ Run Scout"}
+            </button>
+          </div>
+        }
+      />
+
+      <div className="mx-auto max-w-7xl space-y-6 p-6 lg:p-8">
+        {loading ? (
+          <div className="py-16 text-center text-slate-400">Loading…</div>
+        ) : ideas.length === 0 ? (
+          <div className="rounded-2xl border border-slate-100 bg-white p-16 text-center shadow-[0_4px_24px_rgba(0,0,0,0.07)]">
+            <p className="text-slate-400">No scout runs yet. Hit <span className="font-semibold text-slate-600">Run Scout</span> to hunt the internet for ideas nothing in the system covers.</p>
+          </div>
+        ) : (
+          <>
+            <div className="flex flex-wrap items-center gap-3">
+              <label className="ml-auto flex cursor-pointer items-center gap-2 text-sm text-slate-600">
+                <input type="checkbox" checked={tysonOnly} onChange={(e) => setTysonOnly(e.target.checked)}
+                       className="h-4 w-4 rounded border-slate-300 accent-emerald-600" />
+                Tyson-buildable only
+              </label>
+              {runDate && <p className="text-xs text-slate-400">Last run: {runDate}</p>}
+            </div>
+
+            {subtrends.length > 0 && (
+              <div className="rounded-2xl border border-slate-100 bg-white p-6 shadow-[0_4px_24px_rgba(0,0,0,0.07)]">
+                <div className="mb-1 flex items-baseline gap-2">
+                  <h2 className="font-display text-xl font-semibold text-slate-900">Emerging Subtrends</h2>
+                  <span className="text-xs text-slate-400">clustered bottom-up · <span className="font-semibold text-indigo-600">NEW TERRITORY</span> = no uploaded megatrend covers it</span>
+                </div>
+                <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+                  {subtrends.map((s) => <SubtrendCard key={s.subtrend_id} s={s} />)}
+                </div>
+              </div>
+            )}
+
+            <div className="rounded-2xl border border-slate-100 bg-white p-6 shadow-[0_4px_24px_rgba(0,0,0,0.07)]">
+              <div className="mb-1 flex items-baseline gap-2">
+                <h2 className="font-display text-xl font-semibold text-slate-900">This run&apos;s finds</h2>
+                <span className="text-xs text-slate-400">ranked by Tyson fit · demand bar fills in after validation</span>
+              </div>
+              <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+                {shown.map((i) => <IdeaCard key={i.idea_id} idea={i} />)}
+              </div>
+            </div>
+
+            <p className="text-xs text-slate-400">
+              ✦ = novelty score (distance from mainstream US retail) · ranked by Tyson fit, then novelty · these come from internet white space and are guaranteed new to the system.
+            </p>
+          </>
+        )}
       </div>
-
-      {loading ? (
-        <div className="py-12 text-center text-slate-400">Loading…</div>
-      ) : ideas.length === 0 ? (
-        <div className="rounded-xl border border-slate-200 bg-white p-12 text-center text-slate-400">
-          No scout runs yet — hit <span className="font-semibold text-slate-600">Run Scout</span> to
-          hunt the internet for ideas nothing in the system covers.
-        </div>
-      ) : (
-        <>
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="rounded-xl border border-violet-200 bg-violet-50 px-4 py-2 text-violet-700 shadow-sm">
-              <span className="text-xl font-bold tabular-nums">{ideas.length}</span>
-              <span className="ml-1.5 text-xs font-medium opacity-80">surprising finds</span>
-            </div>
-            <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2 text-emerald-700 shadow-sm">
-              <span className="text-xl font-bold tabular-nums">{buildableCount}</span>
-              <span className="ml-1.5 text-xs font-medium opacity-80">with a Tyson angle</span>
-            </div>
-            <label className="ml-auto flex cursor-pointer items-center gap-2 text-sm text-slate-600">
-              <input type="checkbox" checked={tysonOnly} onChange={(e) => setTysonOnly(e.target.checked)}
-                     className="h-4 w-4 rounded border-slate-300 accent-emerald-600" />
-              Tyson-buildable only
-            </label>
-          </div>
-
-          {subtrends.length > 0 && (
-            <div>
-              <div className="mb-2 flex items-baseline gap-2">
-                <h2 className="text-lg font-bold text-slate-900">📈 Emerging subtrends</h2>
-                <span className="text-xs text-slate-500">
-                  clustered bottom-up from all scout finds — <span className="font-semibold text-indigo-600">NEW TERRITORY</span> = no uploaded megatrend covers it
-                </span>
-              </div>
-              <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
-                {subtrends.map((s) => <SubtrendCard key={s.subtrend_id} s={s} />)}
-              </div>
-            </div>
-          )}
-
-          <div className="mb-2 flex items-baseline gap-2 pt-1">
-            <h2 className="text-lg font-bold text-slate-900">This run&apos;s finds</h2>
-            <span className="text-xs text-slate-500">ranked by Tyson fit · demand bar fills in after validation</span>
-          </div>
-          <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
-            {shown.map((i) => <IdeaCard key={i.idea_id} idea={i} />)}
-          </div>
-
-          <p className="text-xs text-slate-500">
-            ✦ = novelty score (distance from mainstream US retail) · ranked by Tyson fit, then novelty · difference vs
-            the Ideas page: these come from internet white space and are guaranteed new to the system, not derived from
-            the megatrends.
-          </p>
-        </>
-      )}
     </div>
   );
 }

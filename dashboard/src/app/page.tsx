@@ -16,7 +16,7 @@ const MODULES = [
     href: "/best",
     icon: "🏛️",
     title: "Megatrends",
-    desc: "10 canonical trend dossiers — fully synthesized, cited, and demand-validated across all ingested sources.",
+    desc: "10 canonical trend dossiers, fully synthesized, cited, and demand-validated across all ingested sources.",
     bar: "from-emerald-500 to-sky-500",
     featured: true,
     img: "protein",
@@ -33,7 +33,7 @@ const MODULES = [
     href: "/discover",
     icon: "🔍",
     title: "Web Discovery",
-    desc: "Per-megatrend web harvest — US Market Radar, emerging signals, Trends-validated.",
+    desc: "Per-megatrend web harvest with US Market Radar, emerging signals, and Trends validation.",
     bar: "from-sky-500 to-cyan-400",
     featured: false,
   },
@@ -57,7 +57,7 @@ const MODULES = [
     href: "/tyson",
     icon: "🐔",
     title: "Tyson Bites",
-    desc: "Cross-document themes clustered from monthly digests — corroboration scores and survey stats.",
+    desc: "Cross-document themes clustered from monthly digests, with corroboration scores and survey stats.",
     bar: "from-red-600 to-rose-500",
     featured: false,
   },
@@ -65,7 +65,6 @@ const MODULES = [
 
 const SOURCES = [
   { href: "/mintel", icon: "📚", label: "Mintel" },
-  { href: "/hartman", icon: "🍽️", label: "Hartman" },
   { href: "/tyson", icon: "🐔", label: "Tyson Bites" },
   { href: "/reports", icon: "▣", label: "Reports" },
   { href: "/methodology", icon: "🧭", label: "Methodology" },
@@ -97,7 +96,7 @@ export default function HomePage() {
       <section className="relative h-[480px] overflow-hidden border-b border-slate-200">
         {/* Full-bleed background image */}
         <Image
-          src="/megatrends/protein.png"
+          src="/hero.png"
           alt="TrendLens"
           fill
           className="object-cover object-center"
@@ -105,7 +104,7 @@ export default function HomePage() {
           priority
         />
         {/* Dark gradient overlay — heavier on the left so text pops */}
-        <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/45 to-black/20" />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/50 to-black/10" />
         {/* Bottom fade to page bg */}
         <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-[#FAF9F6] to-transparent" />
 
@@ -121,7 +120,7 @@ export default function HomePage() {
           </h1>
 
           <p className="mt-4 max-w-[480px] text-[17px] leading-relaxed text-white/70">
-            From agency decks to real-time demand signals — synthesized into navigable intelligence for the innovation team.
+            From agency decks to real-time demand signals, synthesized into navigable intelligence.
           </p>
 
           <div className="mt-8 flex flex-wrap gap-3">
@@ -189,7 +188,7 @@ export default function HomePage() {
                     Megatrends
                   </h3>
                   <p className="mt-2 max-w-xs text-[13.5px] leading-relaxed text-white/75">
-                    10 canonical trend dossiers — fully synthesized, cited, and demand-validated across all ingested sources.
+                    10 canonical trend dossiers, fully synthesized, cited, and demand-validated across all ingested sources.
                   </p>
                 </div>
                 <div className="mt-6 inline-flex items-center gap-1.5 text-[12px] font-semibold text-white/80 transition group-hover:text-white">
@@ -219,25 +218,26 @@ export default function HomePage() {
             </Link>
           </div>
 
-          {/* Secondary row: 4 equal cards */}
+          {/* Secondary row: 4 image-backed cards */}
           <div className="grid grid-cols-4 gap-4">
             {[
-              { href: "/discover", icon: "🔍", title: "Web Discovery", desc: "Per-megatrend web harvest — US Market Radar, Trends-validated.", bar: "from-sky-500 to-cyan-400" },
-              { href: "/map", icon: "🗺️", title: "Trend Map", desc: "Bottom-up megatrend → subtrend → evidence map, deck-compared.", bar: "from-amber-500 to-orange-400" },
-              { href: "/ideas", icon: "💡", title: "Innovation Ideas", desc: "Tyson product concepts with permission tiers and emerging recipes.", bar: "from-rose-500 to-pink-400" },
-              { href: "/tyson", icon: "🐔", title: "Tyson Bites", desc: "Cross-digest themes with corroboration scores and survey stats.", bar: "from-red-600 to-rose-500" },
+              { href: "/discover", title: "Web Discovery",    desc: "Per-megatrend web harvest, Trends-validated.",          img: "/subtrends/blur-0.png" },
+              { href: "/map",      title: "Trend Map",        desc: "Bottom-up megatrend → subtrend → evidence map.",        img: "/subtrends/flavor-0.png" },
+              { href: "/ideas",    title: "Innovation Ideas", desc: "Tyson product concepts with permission tiers.",          img: "/subtrends/convenience-4.png" },
+              { href: "/tyson",    title: "Tyson Bites",      desc: "Cross-digest themes with corroboration scores.",         img: "/subtrends/protein-0.png" },
             ].map((m) => (
               <Link
                 key={m.href}
                 href={m.href}
-                className="group flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:shadow-md hover:-translate-y-0.5"
+                className="group relative flex min-h-[180px] flex-col overflow-hidden rounded-2xl shadow-sm transition hover:shadow-lg hover:-translate-y-0.5"
               >
-                <div className={`h-1 w-full bg-gradient-to-r ${m.bar}`} />
-                <div className="flex flex-1 flex-col p-5">
-                  <span className="text-xl">{m.icon}</span>
-                  <h3 className="mt-2.5 font-display text-[15px] font-semibold text-slate-900">{m.title}</h3>
-                  <p className="mt-1.5 text-[12px] leading-relaxed text-slate-500">{m.desc}</p>
-                  <div className="mt-auto pt-4 text-[11.5px] font-semibold text-slate-400 transition group-hover:text-slate-700">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={m.img} alt="" className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-105" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/10" />
+                <div className="relative flex flex-1 flex-col justify-end p-5">
+                  <h3 className="font-display text-[15px] font-semibold text-white">{m.title}</h3>
+                  <p className="mt-1 text-[11.5px] leading-relaxed text-white/65">{m.desc}</p>
+                  <div className="mt-3 text-[11px] font-semibold text-white/50 transition group-hover:text-white/90">
                     Open →
                   </div>
                 </div>
