@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-interface SourceStat { tag: string; reports: number; ingested?: number; nodes: number | null; last_upload: string | null }
+interface SourceStat { tag: string; reports: number; nodes: number | null; last_upload: string | null }
 interface Stats {
   sources: SourceStat[];
   measures: { measured_terms: number; rising: number; with_data: number };
@@ -37,20 +37,6 @@ const SOURCE_META: Record<string, { name: string; desc: string; color: string; b
     color: "border-purple-200 bg-purple-50",
     badge: "bg-purple-100 text-purple-700",
     icon: "🔬",
-  },
-  kantar: {
-    name: "Kantar & Industry Research",
-    desc: "Retailer deep-dives, shopper behavior snapshots, and category reports from Kantar and other research bodies — tracked in the shared research library and queued for extraction.",
-    color: "border-indigo-200 bg-indigo-50",
-    badge: "bg-indigo-100 text-indigo-700",
-    icon: "📊",
-  },
-  trend_central: {
-    name: "Trend Reports (SharePoint)",
-    desc: "Trend reports dropped into the centralized SharePoint library, automatically detected and queued for ingestion.",
-    color: "border-amber-200 bg-amber-50",
-    badge: "bg-amber-100 text-amber-700",
-    icon: "📁",
   },
 };
 
@@ -211,7 +197,7 @@ export default function MethodologyPage() {
                   <thead className="border-b border-slate-100 bg-slate-50 text-[11px] font-extrabold uppercase tracking-wider text-slate-500">
                     <tr>
                       <th className="px-4 py-3">Source</th>
-                      <th className="px-4 py-3">Files / Reports</th>
+                      <th className="px-4 py-3">Reports</th>
                       <th className="px-4 py-3">Items extracted</th>
                       <th className="px-4 py-3 hidden sm:table-cell">Last updated</th>
                     </tr>
@@ -219,7 +205,6 @@ export default function MethodologyPage() {
                   <tbody className="divide-y divide-slate-100">
                     {stats.sources.map((s) => {
                       const meta = SOURCE_META[s.tag] ?? { name: s.tag, desc: "", badge: "bg-slate-100 text-slate-600", icon: "▣", color: "", };
-                      const isTracked = s.ingested !== undefined;
                       return (
                         <tr key={s.tag} className="bg-white hover:bg-slate-50 transition-colors">
                           <td className="px-4 py-3">
@@ -231,14 +216,7 @@ export default function MethodologyPage() {
                               </div>
                             </div>
                           </td>
-                          <td className="px-4 py-3 font-bold text-slate-800">
-                            {s.reports}
-                            {isTracked && (
-                              <span className="ml-1.5 text-[11px] font-normal text-slate-400">
-                                ({s.ingested} extracted)
-                              </span>
-                            )}
-                          </td>
+                          <td className="px-4 py-3 font-bold text-slate-800">{s.reports}</td>
                           <td className="px-4 py-3 text-slate-600">{s.nodes?.toLocaleString() ?? "—"}</td>
                           <td className="hidden px-4 py-3 text-slate-500 sm:table-cell">{fmtDate(s.last_upload)}</td>
                         </tr>
