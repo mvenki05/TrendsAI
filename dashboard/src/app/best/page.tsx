@@ -635,7 +635,7 @@ export default function CodexPage() {
                 {/* Row 1: Questions + Existing portfolio */}
                 <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
                   {/* How might Tyson? */}
-                  <div className="rounded-2xl border border-slate-200 border-t-4 border-t-amber-400 bg-white p-6 shadow-sm">
+                  <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
                     <p className="text-[10.5px] font-bold uppercase tracking-[0.18em] text-amber-600">How might Tyson…?</p>
                     <ul className="mt-3 space-y-2">
                       {dossier.tyson_questions?.map((q, i) => {
@@ -653,7 +653,7 @@ export default function CodexPage() {
                   </div>
 
                   {/* Already in Tyson's portfolio */}
-                  <div className="rounded-2xl border border-slate-200 border-t-4 border-t-emerald-400 bg-white p-6 shadow-sm">
+                  <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
                     <p className="text-[10.5px] font-bold uppercase tracking-[0.18em] text-emerald-600">Already in Tyson&apos;s portfolio</p>
                     <p className="mt-0.5 text-[11px] text-slate-400">Products already riding this trend</p>
                     {dossier.tyson_portfolio?.length ? (
@@ -683,7 +683,7 @@ export default function CodexPage() {
                 </div>
 
                 {/* Row 2: White space + new concepts — full-width card grid */}
-                <div className="mt-4 rounded-2xl border border-slate-200 border-t-4 border-t-indigo-400 bg-white p-6 shadow-sm">
+                <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
                   <p className="text-[10.5px] font-bold uppercase tracking-[0.18em] text-indigo-600">White space &amp; new concepts</p>
                   <p className="mt-0.5 text-[11px] text-slate-400">Market gaps and net-new Tyson concept ideas — territory nobody has claimed yet</p>
                   {(() => {
