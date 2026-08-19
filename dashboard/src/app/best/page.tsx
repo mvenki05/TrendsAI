@@ -148,13 +148,13 @@ function SectionTitle({ children, tone = "text-slate-900" }: {
   return <h3 className={`text-[26px] font-semibold tracking-tight ${tone}`}>{children}</h3>;
 }
 
-function HorizonColumn({ title, sub, items, accent, tone, refFor }: {
-  title: string; sub: string; accent: string; tone: string;
+function HorizonColumn({ title, sub, items, tone, refFor }: {
+  title: string; sub: string; tone: string;
   items: { title: string; detail: string; rationale: string; cite?: Cite }[];
   refFor: (c?: Cite) => number | undefined;
 }) {
   return (
-    <div className={`rounded-2xl border border-slate-200 border-t-4 bg-white p-6 shadow-sm ${accent}`}>
+    <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
       <div className="flex items-baseline justify-between gap-2">
         <div className={`font-display text-2xl font-semibold ${tone}`}>{title}</div>
         <div className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400">{sub}</div>
@@ -424,9 +424,9 @@ export default function CodexPage() {
               <div id="sec-horizons" className="scroll-mt-24">
                 <SectionTitle no="03" eyebrow="Where this goes">The horizons</SectionTitle>
                 <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-3">
-                  <HorizonColumn title="Now" sub="0–12 mo · act" accent="border-t-rose-400" tone="text-rose-600" items={dossier.horizons?.short ?? []} refFor={refFor} />
-                  <HorizonColumn title="Next" sub="1–3 yr · develop" accent="border-t-amber-400" tone="text-amber-600" items={dossier.horizons?.medium ?? []} refFor={refFor} />
-                  <HorizonColumn title="Later" sub="3+ yr · position" accent="border-t-sky-400" tone="text-sky-600" items={dossier.horizons?.long ?? []} refFor={refFor} />
+                  <HorizonColumn title="Now" sub="0–12 mo · act" tone="text-rose-600" items={dossier.horizons?.short ?? []} refFor={refFor} />
+                  <HorizonColumn title="Next" sub="1–3 yr · develop" tone="text-amber-600" items={dossier.horizons?.medium ?? []} refFor={refFor} />
+                  <HorizonColumn title="Later" sub="3+ yr · position" tone="text-sky-600" items={dossier.horizons?.long ?? []} refFor={refFor} />
                 </div>
               </div>
               </Reveal>
@@ -514,7 +514,6 @@ export default function CodexPage() {
                   const citeForBuild = (b: string) => citeByName.get(b.trim().toLowerCase());
                   return (
                     <div className="mt-4 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-                      <div className={`h-1 w-full ${theme.bar}`} />
                       <div className="px-7 py-5">
                         <div className={`grid grid-cols-1 gap-7 ${hasConsumer ? "lg:grid-cols-5" : ""}`}>
                           {opps.length > 0 && (
