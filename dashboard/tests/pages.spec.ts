@@ -8,7 +8,7 @@ import { test, expect } from "@playwright/test";
 test.describe("/methodology", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/methodology");
-    await page.waitForLoadState("domcontentloaded");
+    await page.waitForLoadState("networkidle");
   });
 
   test("six pipeline step cards are visible", async ({ page }) => {
@@ -51,7 +51,7 @@ test.describe("/methodology", () => {
 test.describe("/lab", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/lab");
-    await page.waitForLoadState("domcontentloaded");
+    await page.waitForLoadState("networkidle");
   });
 
   test("Run Scout and Refresh buttons are visible", async ({ page }) => {
@@ -86,11 +86,12 @@ test.describe("/lab", () => {
 test.describe("/discover", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/discover");
-    await page.waitForLoadState("domcontentloaded");
+    await page.waitForLoadState("networkidle");
   });
 
   test("period toggle buttons are visible and switch active state", async ({ page }) => {
-    const toggles = page.locator("button").filter({ hasText: /^\d+w$/ });
+    // PERIODS labels are "3M", "6M", "12M" (not week-suffixed)
+    const toggles = page.locator("button").filter({ hasText: /^(3|6|12)M$/ });
     await expect(toggles.first()).toBeVisible({ timeout: 20_000 });
 
     const secondToggle = toggles.nth(1);
@@ -136,7 +137,7 @@ test.describe("/discover", () => {
 test.describe("/ideas", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/ideas");
-    await page.waitForLoadState("domcontentloaded");
+    await page.waitForLoadState("networkidle");
   });
 
   test("badge legend card is visible", async ({ page }) => {
@@ -173,7 +174,7 @@ test.describe("/ideas", () => {
 test.describe("/map", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/map");
-    await page.waitForLoadState("domcontentloaded");
+    await page.waitForLoadState("networkidle");
   });
 
   test("Build Map and Refresh buttons are visible", async ({ page }) => {
@@ -202,7 +203,7 @@ test.describe("/map", () => {
 test.describe("/tyson", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/tyson");
-    await page.waitForLoadState("domcontentloaded");
+    await page.waitForLoadState("networkidle");
   });
 
   test("theme cards appear with persistence badges", async ({ page }) => {
@@ -231,7 +232,7 @@ test.describe("/tyson", () => {
 test.describe("/mintel", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/mintel");
-    await page.waitForLoadState("domcontentloaded");
+    await page.waitForLoadState("networkidle");
   });
 
   test("stat tiles render after data loads", async ({ page }) => {

@@ -4,49 +4,57 @@
  */
 import { test, expect } from "@playwright/test";
 
+// Megatrend selector panel — the aside below the top nav
+const megaPanel = (page: import("@playwright/test").Page) =>
+  page.locator("aside[class*='top-12']");
+
+// Megatrend image-card buttons only (exclude section scroll buttons which are also in the aside)
+const megaCards = (page: import("@playwright/test").Page) =>
+  megaPanel(page).locator("button:has(img)");
+
 test.beforeEach(async ({ page }) => {
   await page.goto("/best");
-  // Wait for BigQuery data — spinner disappears and aside cards appear
-  await expect(page.locator("aside").getByRole("button").first()).toBeVisible({ timeout: 30_000 });
+  // Wait for megatrend image-card buttons to appear (excludes section scroll buttons)
+  await expect(megaCards(page).first()).toBeVisible({ timeout: 45_000 });
 });
 
 test("codex — megatrend selector cards render in aside panel", async ({ page }) => {
-  const cards = page.locator("aside").getByRole("button");
+  const cards = megaCards(page);
   await expect(cards.first()).toBeVisible();
   const count = await cards.count();
-  expect(count).toBeGreaterThan(0);
+  expect(count).toBeGreaterThan(1); // at least 2 megatrends
 });
 
 test("codex — first megatrend auto-selects and shows dossier heading", async ({ page }) => {
-  const h2 = page.locator("main h2, article h2").first();
-  await expect(h2).toBeVisible({ timeout: 20_000 });
+  // Dossier h2 is a large heading in the hero section (not inside <main>/<article>)
+  const h2 = page.locator("h2.max-w-3xl").first();
+  await expect(h2).toBeVisible({ timeout: 30_000 });
   const text = await h2.textContent();
   expect(text?.trim().length).toBeGreaterThan(0);
 });
 
 test("codex — clicking a different megatrend updates the dossier", async ({ page }) => {
-  // Get current dossier name
-  const h2 = page.locator("main h2, article h2").first();
-  await expect(h2).toBeVisible({ timeout: 20_000 });
-  const firstName = await h2.textContent();
+  const h2 = page.locator("h2.max-w-3xl").first();
+  await expect(h2).toBeVisible({ timeout: 30_000 });
+  const firstName = (await h2.textContent()) ?? "";
 
-  // Click the second megatrend card if there is one
-  const cards = page.locator("aside").getByRole("button");
-  const count = await cards.count();
-  if (count < 2) {
-    test.skip();
-    return;
-  }
+  const cards = megaCards(page);
+  if ((await cards.count()) < 2) { test.skip(); return; }
+
+  // Get the second card's label so we know what to expect
+  const secondCardText = (await cards.nth(1).textContent()) ?? "";
   await cards.nth(1).click();
 
-  // Dossier heading should update (wait for it to differ or just be visible)
-  await expect(h2).toBeVisible({ timeout: 15_000 });
-  const secondName = await h2.textContent();
-  expect(secondName).not.toEqual(firstName);
+  // Wait for h2 to change to something different (not the original)
+  await expect(h2).not.toHaveText(firstName, { timeout: 10_000 });
+  // And verify it reflects the clicked card's name (partial match)
+  const shortName = secondCardText.trim().slice(0, 8);
+  if (shortName) await expect(h2).toContainText(shortName, { timeout: 5_000 });
 });
 
 test("codex — section scroll links appear below active megatrend card", async ({ page }) => {
-  await expect(page.getByRole("button", { name: /what.s happening now/i })).toBeVisible({ timeout: 15_000 });
+  // Section links render inside the nav sidebar's codex-detail mode, not the megatrend panel aside
+  await expect(page.getByRole("button", { name: /what.s happening now/i })).toBeVisible({ timeout: 20_000 });
   await expect(page.getByRole("button", { name: /horizons/i })).toBeVisible();
   await expect(page.getByRole("button", { name: /subtrends/i })).toBeVisible();
   await expect(page.getByRole("button", { name: /tyson layer/i })).toBeVisible();
