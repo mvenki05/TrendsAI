@@ -243,10 +243,13 @@ export default function CodexPage() {
         {segments.map((seg, i) => {
           const n = seg.cite ? refFor(seg.cite) : undefined;
           const href = seg.cite ? citeHref(seg.cite) : null;
+          // Suppress duplicate: skip [n] if the previous segment already cited the same source
+          const prevKey = i > 0 ? citeKey(segments[i - 1].cite) : null;
+          const showCite = n && href && citeKey(seg.cite) !== prevKey;
           return (
             <span key={i}>
               {seg.text}
-              {n && href && (
+              {showCite && (
                 <a href={href} target="_blank" rel="noreferrer"
                    title={`${seg.cite!.label || "source"}${seg.cite!.page ? ` · p.${seg.cite!.page}` : ""}`}
                    className={`align-super text-[10.5px] font-extrabold hover:underline ${dark ? "text-sky-300 hover:text-sky-200" : "text-sky-600 hover:text-sky-800"}`}>
