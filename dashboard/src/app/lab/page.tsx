@@ -62,6 +62,15 @@ function parseSources(raw: string | null): Src[] {
   }
 }
 
+function siteName(s: Src): string {
+  if (s.url) {
+    try {
+      return new URL(s.url).hostname.replace(/^www\./, "");
+    } catch { /* fall through */ }
+  }
+  return s.source || s.title || "Source";
+}
+
 function parseNames(raw: string | null): string[] {
   if (!raw) return [];
   try {
@@ -230,11 +239,11 @@ function IdeaCard({ idea }: { idea: WhiteSpaceIdea }) {
             s.url ? (
               <a key={i} href={s.url} target="_blank" rel="noreferrer"
                  className="inline-flex items-center gap-1 rounded bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-600 hover:bg-sky-100 hover:text-sky-700">
-                <span>↗</span>{s.source || s.title || "Source"}
+                <span>↗</span>{siteName(s)}
               </a>
             ) : (
-              <span key={i} className="inline-flex items-center rounded bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-600">
-                {s.source || s.title || "Source"}
+              <span key={i} className="inline-flex items-center gap-1 rounded bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-600">
+                <span>↗</span>{siteName(s)}
               </span>
             )
           )}

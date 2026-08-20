@@ -710,7 +710,7 @@ export default function CodexPage() {
                                 {w.note && <p className="text-[13px] leading-relaxed text-slate-600">{w.note}</p>}
                                 {w.cite && (
                                   <div className="mt-auto pt-1">
-                                    <CiteLink cite={w.cite} refNo={refFor(w.cite)} />
+                                    <CiteLink cite={w.cite} />
                                   </div>
                                 )}
                               </div>
