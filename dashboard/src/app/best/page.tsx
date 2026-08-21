@@ -519,6 +519,15 @@ export default function CodexPage() {
                   return (
                     <div className="mt-4 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
                       <div className="px-7 py-5">
+                        {/* Subtrend definition */}
+                        {s.description && (
+                          <div className="mb-6 border-b border-slate-100 pb-6">
+                            <p className="mb-2 flex items-center gap-2 text-[10.5px] font-bold uppercase tracking-[0.18em] text-slate-400">
+                              <span className="h-1.5 w-1.5 rounded-full bg-slate-300" /> What this subtrend is about
+                            </p>
+                            <p className="text-[14.5px] leading-relaxed text-slate-700">{s.description}</p>
+                          </div>
+                        )}
                         <div className={`grid grid-cols-1 gap-7 ${hasConsumer ? "lg:grid-cols-5" : ""}`}>
                           {opps.length > 0 && (
                             <div className={hasConsumer ? "lg:col-span-3" : ""}>
