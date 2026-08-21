@@ -100,6 +100,16 @@ const TIER_STYLE: Record<string, { badge: string; icon: string }> = {
   Stretch:  { badge: "bg-orange-100 text-orange-700", icon: "⚑" },
 };
 
+// Strip a known brand prefix from an idea name so concept cards don't lead with brand names.
+function stripBrand(name: string, brand?: string | null): string {
+  if (!brand) return name;
+  const prefix = brand.trim();
+  if (name.toLowerCase().startsWith(prefix.toLowerCase())) {
+    return name.slice(prefix.length).replace(/^[\s–\-:]+/, "").trim();
+  }
+  return name;
+}
+
 // Stable identity for a citation: same doc+page (or same URL) = same reference number.
 function citeKey(cite?: Cite): string | null {
   if (!cite) return null;
@@ -734,7 +744,7 @@ export default function CodexPage() {
                             return (
                               <div key={i} className="flex flex-col gap-2 rounded-xl border border-violet-100 bg-violet-50 p-4">
                                 <div className="flex items-start justify-between gap-2">
-                                  <span className="text-[14px] font-bold leading-snug text-slate-900">{it.name}</span>
+                                  <span className="text-[14px] font-bold leading-snug text-slate-900">{stripBrand(it.name, it.brand)}</span>
                                   <div className="flex shrink-0 flex-wrap justify-end gap-1">
                                     {tierStyle && (
                                       <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${tierStyle.badge}`}>
