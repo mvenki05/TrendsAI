@@ -13,7 +13,7 @@ interface HomeStats {
 
 const MODULES = [
   {
-    href: "/best",
+    href: "/megatrends",
     icon: "🏛️",
     title: "Megatrends",
     desc: "10 canonical trend dossiers, fully synthesized, cited, and demand-validated across all ingested sources.",
@@ -125,7 +125,7 @@ export default function HomePage() {
 
           <div className="mt-8 flex flex-wrap gap-3">
             <Link
-              href="/best"
+              href="/megatrends"
               className="inline-flex items-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-semibold text-slate-900 shadow-md transition hover:bg-slate-100"
             >
               Explore Megatrends <span aria-hidden>→</span>

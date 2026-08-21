@@ -6,7 +6,7 @@ import { useState, useRef, useEffect } from "react";
 
 const NAV_ITEMS = [
   { href: "/",         label: "Home",            match: (p: string) => p === "/" },
-  { href: "/best",     label: "Megatrends",       match: (p: string) => p.startsWith("/best") },
+  { href: "/megatrends", label: "Megatrends",     match: (p: string) => p.startsWith("/megatrends") || p.startsWith("/best") },
   { href: "/discover", label: "Web Discovery",    match: (p: string) => p.startsWith("/discover") },
   { href: "/map",      label: "Trend Map",        match: (p: string) => p.startsWith("/map") },
   { href: "/ideas",    label: "Innovation Ideas", match: (p: string) => p.startsWith("/ideas") },

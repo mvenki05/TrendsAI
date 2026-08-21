@@ -197,12 +197,13 @@ export default function CodexPage() {
   };
 
   const load = useCallback(() => {
+    const keyParam = new URLSearchParams(window.location.search).get("key");
     fetch("/api/codex")
       .then((r) => r.json())
       .then((d) => {
         if (Array.isArray(d.megatrends)) {
           setRows(d.megatrends);
-          if (d.megatrends.length > 0) setSelected((s) => s ?? d.megatrends[0].key);
+          if (d.megatrends.length > 0) setSelected((s) => s ?? keyParam ?? d.megatrends[0].key);
         }
       })
       .finally(() => setLoading(false));

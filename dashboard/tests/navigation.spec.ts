@@ -78,11 +78,11 @@ test("TopNav — Sources dropdown: Mintel link navigates to /mintel", async ({ p
   await expect(page).toHaveURL("/mintel");
 });
 
-test("home — 'Explore Megatrends' CTA navigates to /best", async ({ page }) => {
+test("home — 'Explore Megatrends' CTA navigates to /megatrends", async ({ page }) => {
   await page.goto("/");
   await page.waitForLoadState("networkidle");
   await page.getByRole("link", { name: /explore megatrends/i }).first().click();
-  await expect(page).toHaveURL("/best");
+  await expect(page).toHaveURL("/megatrends");
 });
 
 test("home — 'White Space Scout' CTA navigates to /lab", async ({ page }) => {
