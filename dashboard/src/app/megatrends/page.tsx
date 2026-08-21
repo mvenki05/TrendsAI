@@ -29,6 +29,11 @@ const RANK_ACCENT: Record<number, string> = {
   3: "border-l-orange-300",
 };
 
+const HERO_IMAGES = [
+  "protein", "value", "flavor", "social", "functional",
+  "cleanlabel", "convenience", "conscious", "blur", "glp1",
+];
+
 export default function MegatrendsPage() {
   const [rows, setRows]       = useState<CodexRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -43,27 +48,62 @@ export default function MegatrendsPage() {
   return (
     <div className="min-h-screen bg-slate-50">
 
-      {/* ── Hero ──────────────────────────────────────────────────────── */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 px-6 py-14 text-white">
-        {/* decorative rings */}
-        <div className="pointer-events-none absolute -right-24 -top-24 h-96 w-96 rounded-full bg-emerald-500/10 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-16 left-1/3 h-72 w-72 rounded-full bg-sky-500/10 blur-3xl" />
+      {/* ── Hero — full-bleed image mosaic ────────────────────────────── */}
+      <div className="relative h-[420px] overflow-hidden">
 
-        <div className="relative mx-auto max-w-4xl">
-          <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-emerald-400">Megatrend Codex</p>
-          <h1 className="mt-2 font-display text-4xl font-semibold tracking-tight lg:text-5xl">
-            10 Canonical Trend Forces
-          </h1>
-          <p className="mt-3 max-w-xl text-[15px] leading-relaxed text-slate-400">
-            Synthesized from agencies, Mintel, Hartman Group, and Tyson&apos;s internal digests.
-            Ranked by evidence strength. Click any to open its full dossier.
+        {/* 10-image mosaic strip */}
+        <div className="absolute inset-0 flex">
+          {HERO_IMAGES.map((key) => (
+            <div key={key} className="relative flex-1 overflow-hidden">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={`/megatrends/${key}.png`}
+                alt=""
+                className="h-full w-full object-cover"
+              />
+            </div>
+          ))}
+        </div>
+
+        {/* Layered overlays for depth + text legibility */}
+        <div className="absolute inset-0 bg-slate-950/75" />
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-slate-950/40" />
+        <div className="absolute inset-0 bg-gradient-to-r from-slate-950/60 via-transparent to-slate-950/60" />
+
+        {/* Thin seam lines between columns for texture */}
+        <div className="pointer-events-none absolute inset-0 flex">
+          {HERO_IMAGES.map((key) => (
+            <div key={key} className="flex-1 border-r border-white/5 last:border-r-0" />
+          ))}
+        </div>
+
+        {/* Text content */}
+        <div className="relative flex h-full flex-col items-center justify-center px-6 text-center text-white">
+          <p className="mb-4 text-[10px] font-bold uppercase tracking-[0.28em] text-emerald-400">
+            Megatrend Codex · {HERO_IMAGES.length} Canonical Forces
           </p>
-          <div className="mt-5 flex flex-wrap gap-2 text-[12px]">
-            <span className="rounded-full bg-white/10 px-3 py-1 font-medium text-slate-300">📄 Source-grounded</span>
-            <span className="rounded-full bg-white/10 px-3 py-1 font-medium text-slate-300">📈 Demand-measured</span>
-            <span className="rounded-full bg-white/10 px-3 py-1 font-medium text-slate-300">🔗 Fully cited</span>
+          <h1 className="font-display text-5xl font-semibold tracking-tight lg:text-6xl">
+            The Trends Shaping<br />What People Eat
+          </h1>
+          <p className="mt-5 max-w-lg text-[15px] leading-relaxed text-slate-300">
+            Synthesized from agencies, Mintel, Hartman Group, and Tyson&apos;s own digests.
+            Ranked by evidence strength — click any to open its full dossier.
+          </p>
+          <div className="mt-7 flex flex-wrap justify-center gap-2 text-[12px]">
+            <span className="rounded-full border border-white/15 bg-white/10 px-3.5 py-1.5 font-medium text-white/80 backdrop-blur-sm">
+              📄 Source-grounded
+            </span>
+            <span className="rounded-full border border-white/15 bg-white/10 px-3.5 py-1.5 font-medium text-white/80 backdrop-blur-sm">
+              📈 Demand-measured
+            </span>
+            <span className="rounded-full border border-white/15 bg-white/10 px-3.5 py-1.5 font-medium text-white/80 backdrop-blur-sm">
+              🔗 Fully cited
+            </span>
           </div>
         </div>
+
+        {/* Bottom fade into page bg */}
+        <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-slate-50 to-transparent" />
       </div>
 
       {/* ── List ──────────────────────────────────────────────────────── */}

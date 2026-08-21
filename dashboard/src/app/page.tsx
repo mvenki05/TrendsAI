@@ -170,7 +170,7 @@ export default function HomePage() {
           <div className="mb-4 grid grid-cols-3 gap-4">
             {/* Megatrends — spans 2 cols, image-backed */}
             <Link
-              href="/best"
+              href="/megatrends"
               className="group relative col-span-2 flex min-h-[220px] flex-col overflow-hidden rounded-2xl shadow-sm transition hover:shadow-lg hover:-translate-y-0.5"
             >
               <Image
