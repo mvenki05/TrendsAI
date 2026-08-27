@@ -1,4 +1,5 @@
 "use client";
+import { apiUrl, assetUrl } from "@/lib/api";
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
@@ -39,7 +40,7 @@ export default function MegatrendsPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/codex")
+    fetch(apiUrl("/codex"))
       .then((r) => r.json())
       .then((d) => { if (Array.isArray(d.megatrends)) setRows(d.megatrends); })
       .finally(() => setLoading(false));
@@ -57,7 +58,7 @@ export default function MegatrendsPage() {
             <div key={key} className="relative flex-1 overflow-hidden">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={`/megatrends/${key}.png`}
+                src={assetUrl(`/megatrends/${key}.webp`)}
                 alt=""
                 className="h-full w-full object-cover"
               />
@@ -135,7 +136,7 @@ export default function MegatrendsPage() {
                     {/* Image */}
                     <div className="relative h-28 w-28 shrink-0 overflow-hidden rounded-xl shadow-md">
                       <img
-                        src={`/megatrends/${row.key}.png`}
+                        src={assetUrl(`/megatrends/${row.key}.webp`)}
                         alt={row.name}
                         className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                         onError={(e) => {

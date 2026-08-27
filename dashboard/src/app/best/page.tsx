@@ -1,4 +1,5 @@
 "use client";
+import { apiUrl, assetUrl, HOSTED } from "@/lib/api";
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
@@ -111,7 +112,7 @@ function stripBrand(name: string, brand?: string | null): string {
 }
 
 // Stable identity for a citation: same doc+page (or same URL) = same reference number.
-function citeKey(cite?: Cite): string | null {
+function citeKey(cite?: Cite | null): string | null {
   if (!cite) return null;
   if (cite.kind === "web" && cite.url) return `w|${cite.url}`;
   if (cite.report_id) return `r|${cite.report_id}|${cite.page ?? ""}`;
@@ -120,7 +121,8 @@ function citeKey(cite?: Cite): string | null {
 
 function citeHref(cite: Cite): string | null {
   if (cite.kind === "web" && cite.url) return cite.url;
-  if (cite.report_id) return `/api/file/${cite.report_id}${cite.page ? `#page=${cite.page}` : ""}`;
+  // Source files live on local disk only — no file serving in the hosted build.
+  if (cite.report_id) return HOSTED ? null : `/api/file/${cite.report_id}${cite.page ? `#page=${cite.page}` : ""}`;
   return null;
 }
 
@@ -208,7 +210,7 @@ export default function CodexPage() {
 
   const load = useCallback(() => {
     const keyParam = new URLSearchParams(window.location.search).get("key");
-    fetch("/api/codex")
+    fetch(apiUrl("/codex"))
       .then((r) => r.json())
       .then((d) => {
         if (Array.isArray(d.megatrends)) {
@@ -295,7 +297,7 @@ export default function CodexPage() {
                 >
                   <div className="relative h-[72px]">
                     <Image
-                      src={`/megatrends/${r.key}.png`}
+                      src={assetUrl(`/megatrends/${r.key}.webp`)}
                       alt={r.name}
                       fill
                       className="object-cover transition duration-300 group-hover:scale-105"
@@ -337,7 +339,7 @@ export default function CodexPage() {
       {/* ── Dossier content ─────────────────────────────────────── */}
       <div className="ml-[220px] min-w-0 flex-1">
       {dossier && presenting && (
-        <PresentMode dossier={dossier} imageSrc={`/megatrends/${selected}.png`}
+        <PresentMode dossier={dossier} imageSrc={assetUrl(`/megatrends/${selected}.webp`)}
                      rank={row?.rank} total={rows.length} onClose={() => setPresenting(false)} />
       )}
 
@@ -357,7 +359,7 @@ export default function CodexPage() {
               {/* Hero — editorial image with scrim, gradient fallback */}
               <div className={`relative overflow-hidden rounded-3xl bg-gradient-to-br ${theme.grad} text-white shadow-lg`}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={`/megatrends/${selected}.png`} alt=""
+                <img src={assetUrl(`/megatrends/${selected}.webp`)} alt=""
                      className="absolute inset-0 h-full w-full object-cover"
                      onError={(e) => { e.currentTarget.style.display = "none"; }} />
                 <div className="absolute inset-0 bg-gradient-to-r from-slate-950/85 via-slate-950/55 to-slate-950/15" />
@@ -473,7 +475,7 @@ export default function CodexPage() {
                                ${isSel ? `ring-2 ${theme.ring} shadow-xl` : "border border-slate-200 shadow-sm hover:shadow-md hover:border-slate-300"}`}>
                           <div className={`relative overflow-hidden bg-gradient-to-br ${theme.grad} h-[160px]`}>
                             {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img src={`/subtrends/${selected}-${i}.png`} alt=""
+                            <img src={assetUrl(`/subtrends/${selected}-${i}.webp`)} alt=""
                                  className="absolute inset-0 h-full w-full object-cover"
                                  onError={(e) => { e.currentTarget.style.display = "none"; }} />
                             <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-black/10" />
@@ -815,12 +817,18 @@ export default function CodexPage() {
                   {dossier.sources?.map((s, i) => (
                     s.report_id ? (
                       <span key={i} className="inline-flex items-center gap-1">
-                        <a href={`/api/file/${s.report_id}`} target="_blank" rel="noreferrer"
-                           className={`rounded-lg px-2.5 py-1.5 text-[13px] font-semibold hover:opacity-75 ${TAG_STYLE[s.source_tag ?? ""] ?? "bg-slate-100 text-slate-600"}`}
-                           title="Open the original document">
-                          📄 {s.label}
-                        </a>
-                        <Link href={`/report/${s.report_id}`}
+                        {HOSTED ? (
+                          <span className={`rounded-lg px-2.5 py-1.5 text-[13px] font-semibold ${TAG_STYLE[s.source_tag ?? ""] ?? "bg-slate-100 text-slate-600"}`}>
+                            📄 {s.label}
+                          </span>
+                        ) : (
+                          <a href={`/api/file/${s.report_id}`} target="_blank" rel="noreferrer"
+                             className={`rounded-lg px-2.5 py-1.5 text-[13px] font-semibold hover:opacity-75 ${TAG_STYLE[s.source_tag ?? ""] ?? "bg-slate-100 text-slate-600"}`}
+                             title="Open the original document">
+                            📄 {s.label}
+                          </a>
+                        )}
+                        <Link href={`/report?id=${s.report_id}`}
                               className="rounded-md bg-slate-50 px-1.5 py-1.5 text-[11px] font-medium text-slate-400 hover:text-slate-600"
                               title="Open the extracted view in TrendLens">
                           tree

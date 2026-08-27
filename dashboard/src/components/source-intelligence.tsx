@@ -1,4 +1,5 @@
 "use client";
+import { apiUrl } from "@/lib/api";
 
 import { useCallback, useEffect, useState } from "react";
 import { levelLabel } from "@/lib/levels";
@@ -73,7 +74,7 @@ export default function SourceIntelligence({ tag, icon, title, blurb }: {
 
   const load = useCallback(() => {
     setLoading(true);
-    fetch(`/api/source/${tag}`)
+    fetch(apiUrl(`/source/${tag}`))
       .then((r) => r.json())
       .then((d) => {
         if (Array.isArray(d.reports)) setReports(d.reports);

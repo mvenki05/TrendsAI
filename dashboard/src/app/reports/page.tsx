@@ -1,4 +1,5 @@
 "use client";
+import { apiUrl, HOSTED } from "@/lib/api";
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
@@ -21,7 +22,7 @@ export default function ReportsPage() {
 
   const loadReports = useCallback(async () => {
     try {
-      const data = await fetch("/api/reports").then((r) => r.json());
+      const data = await fetch(apiUrl("/reports")).then((r) => r.json());
       if (Array.isArray(data)) setReports(data);
     } catch {
       /* ignore transient */
@@ -46,7 +47,7 @@ export default function ReportsPage() {
     try {
       const fd = new FormData();
       fd.append("file", file);
-      const res = await fetch("/api/upload", { method: "POST", body: fd });
+      const res = await fetch(apiUrl("/upload"), { method: "POST", body: fd });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Upload failed");
       if (fileRef.current) fileRef.current.value = "";
@@ -78,7 +79,8 @@ export default function ReportsPage() {
         </p>
       </div>
 
-      {/* Upload */}
+      {/* Upload — local-only: the ingest pipeline (LLM + Playwright) doesn't exist hosted */}
+      {!HOSTED && (
       <form onSubmit={onUpload} className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
         <div className="flex flex-wrap items-center gap-3">
           <input
@@ -99,6 +101,7 @@ export default function ReportsPage() {
         {error && <div className="mt-3 text-sm text-rose-600">{error}</div>}
         {info && <div className="mt-3 text-sm text-sky-600">{info}</div>}
       </form>
+      )}
 
       {/* Reports list */}
       <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
@@ -143,7 +146,7 @@ export default function ReportsPage() {
                 </div>
               );
               return clickable ? (
-                <Link key={r.report_id} href={`/report/${r.report_id}`}>{inner}</Link>
+                <Link key={r.report_id} href={`/report?id=${r.report_id}`}>{inner}</Link>
               ) : (
                 <div key={r.report_id} className="opacity-70">{inner}</div>
               );

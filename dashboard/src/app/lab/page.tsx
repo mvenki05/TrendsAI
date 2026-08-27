@@ -1,4 +1,5 @@
 "use client";
+import { apiUrl, HOSTED } from "@/lib/api";
 
 import { useCallback, useEffect, useState } from "react";
 import { PageHeader } from "@/components/page-header";
@@ -262,7 +263,7 @@ export default function LabPage() {
 
   const load = useCallback(() => {
     setLoading(true);
-    fetch("/api/lab")
+    fetch(apiUrl("/lab"))
       .then((r) => r.json())
       .then((d) => {
         if (Array.isArray(d.ideas)) setIdeas(d.ideas);
@@ -275,7 +276,7 @@ export default function LabPage() {
 
   const runScout = async () => {
     setRunning(true);
-    await fetch("/api/lab/run", { method: "POST" });
+    await fetch(apiUrl("/lab/run"), { method: "POST" });
   };
 
   const buildableCount = ideas.filter((i) => i.buildable).length;
@@ -287,7 +288,7 @@ export default function LabPage() {
       <PageHeader
         title="White Space Scout"
         description="Novel ideas from the open internet, anchored to Tyson's real product categories. Novelty-gated and demand-validated."
-        img="/subtrends/convenience-4.png"
+        img="/subtrends/convenience-4.webp"
         badge="Innovation Intelligence"
         stats={ideas.length > 0 ? [
           { value: ideas.length, label: "surprising finds" },
@@ -298,10 +299,12 @@ export default function LabPage() {
             <button onClick={load} className="rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm font-medium text-white backdrop-blur-sm hover:bg-white/20">
               Refresh
             </button>
-            <button onClick={runScout} disabled={running}
-              className="rounded-full bg-white px-4 py-2 text-sm font-semibold text-slate-900 shadow-sm hover:bg-slate-100 disabled:opacity-50">
-              {running ? "Scouting… (10–20 min, refresh later)" : "▶ Run Scout"}
-            </button>
+            {!HOSTED && (
+              <button onClick={runScout} disabled={running}
+                className="rounded-full bg-white px-4 py-2 text-sm font-semibold text-slate-900 shadow-sm hover:bg-slate-100 disabled:opacity-50">
+                {running ? "Scouting… (10–20 min, refresh later)" : "▶ Run Scout"}
+              </button>
+            )}
           </div>
         }
       />

@@ -1,4 +1,5 @@
 "use client";
+import { apiUrl, assetUrl } from "@/lib/api";
 
 import Link from "next/link";
 import Image from "next/image";
@@ -65,7 +66,7 @@ export function Sidebar() {
 
   useEffect(() => {
     if (!onCodex || codexRows.length > 0) return;
-    fetch("/api/codex")
+    fetch(apiUrl("/codex"))
       .then((r) => r.json())
       .then((d) => {
         if (Array.isArray(d.megatrends))
@@ -150,7 +151,7 @@ export function Sidebar() {
                 <div className="flex items-center gap-2.5 px-2.5 py-2">
                   <div className="relative h-8 w-8 shrink-0 overflow-hidden rounded-md">
                     <Image
-                      src={`/megatrends/${r.key}.png`}
+                      src={assetUrl(`/megatrends/${r.key}.webp`)}
                       alt={r.name}
                       fill
                       className="object-cover transition duration-300 group-hover:scale-105"
@@ -181,7 +182,7 @@ export function Sidebar() {
             <div className="mb-3 flex items-center gap-2.5 rounded-xl border border-slate-100 px-2.5 py-2 shadow-sm">
               <div className="relative h-8 w-8 shrink-0 overflow-hidden rounded-md">
                 <Image
-                  src={`/megatrends/${codexActive}.png`}
+                  src={assetUrl(`/megatrends/${codexActive}.webp`)}
                   alt={codexActive}
                   fill
                   className="object-cover"

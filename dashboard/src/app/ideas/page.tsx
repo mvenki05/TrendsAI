@@ -1,4 +1,5 @@
 "use client";
+import { apiUrl } from "@/lib/api";
 
 import { useEffect, useState } from "react";
 import { PageHeader } from "@/components/page-header";
@@ -136,7 +137,7 @@ export default function IdeasPage() {
   const [defaultedOpen, setDefaultedOpen] = useState(false);
 
   useEffect(() => {
-    fetch("/api/ideas")
+    fetch(apiUrl("/ideas"))
       .then((r) => r.json())
       .then((d) => {
         if (Array.isArray(d.ideas)) setIdeas(d.ideas);
@@ -174,7 +175,7 @@ export default function IdeasPage() {
       <PageHeader
         title="Innovation Ideas"
         description="Grounded product concepts, each invented from a proven megatrend and a Tyson brand with permission to play. Alongside them, emerging real-world dishes as demand signal."
-        img="/subtrends/protein-0.png"
+        img="/subtrends/protein-0.webp"
         badge="Product Innovation"
         stats={ideas.length > 0 ? [
           { value: byMega.size, label: "megatrends" },

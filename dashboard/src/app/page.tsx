@@ -1,4 +1,5 @@
 "use client";
+import { apiUrl, assetUrl } from "@/lib/api";
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
@@ -74,7 +75,7 @@ export default function HomePage() {
   const [stats, setStats] = useState<HomeStats | null>(null);
 
   useEffect(() => {
-    fetch("/api/methodology")
+    fetch(apiUrl("/methodology"))
       .then((r) => r.json())
       .then((d) => {
         const totalReports = Array.isArray(d.sources)
@@ -96,7 +97,7 @@ export default function HomePage() {
       <section className="relative h-[480px] overflow-hidden border-b border-slate-200">
         {/* Full-bleed background image */}
         <Image
-          src="/hero.png"
+          src={assetUrl("/hero.webp")}
           alt="TrendLens"
           fill
           className="object-cover object-center"
@@ -174,7 +175,7 @@ export default function HomePage() {
               className="group relative col-span-2 flex min-h-[220px] flex-col overflow-hidden rounded-2xl shadow-sm transition hover:shadow-lg hover:-translate-y-0.5"
             >
               <Image
-                src="/megatrends/protein.png"
+                src={assetUrl("/megatrends/protein.webp")}
                 alt="Megatrends"
                 fill
                 className="object-cover transition duration-500 group-hover:scale-105"
@@ -221,10 +222,10 @@ export default function HomePage() {
           {/* Secondary row: 4 image-backed cards */}
           <div className="grid grid-cols-4 gap-4">
             {[
-              { href: "/discover", title: "Web Discovery",    desc: "Per-megatrend web harvest, Trends-validated.",          img: "/subtrends/blur-0.png" },
-              { href: "/map",      title: "Trend Map",        desc: "Bottom-up megatrend → subtrend → evidence map.",        img: "/subtrends/flavor-0.png" },
-              { href: "/ideas",    title: "Innovation Ideas", desc: "Tyson product concepts with permission tiers.",          img: "/subtrends/convenience-4.png" },
-              { href: "/tyson",    title: "Tyson Bites",      desc: "Cross-digest themes with corroboration scores.",         img: "/subtrends/protein-0.png" },
+              { href: "/discover", title: "Web Discovery",    desc: "Per-megatrend web harvest, Trends-validated.",          img: "/subtrends/blur-0.webp" },
+              { href: "/map",      title: "Trend Map",        desc: "Bottom-up megatrend → subtrend → evidence map.",        img: "/subtrends/flavor-0.webp" },
+              { href: "/ideas",    title: "Innovation Ideas", desc: "Tyson product concepts with permission tiers.",          img: "/subtrends/convenience-4.webp" },
+              { href: "/tyson",    title: "Tyson Bites",      desc: "Cross-digest themes with corroboration scores.",         img: "/subtrends/protein-0.webp" },
             ].map((m) => (
               <Link
                 key={m.href}
@@ -232,7 +233,7 @@ export default function HomePage() {
                 className="group relative flex min-h-[180px] flex-col overflow-hidden rounded-2xl shadow-sm transition hover:shadow-lg hover:-translate-y-0.5"
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={m.img} alt="" className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-105" />
+                <img src={assetUrl(m.img)} alt="" className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-105" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/10" />
                 <div className="relative flex flex-1 flex-col justify-end p-5">
                   <h3 className="font-display text-[15px] font-semibold text-white">{m.title}</h3>

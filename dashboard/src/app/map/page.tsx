@@ -1,4 +1,5 @@
 "use client";
+import { apiUrl, HOSTED } from "@/lib/api";
 
 import { useCallback, useEffect, useState } from "react";
 import { levelLabel } from "@/lib/levels";
@@ -103,7 +104,7 @@ export default function MapPage() {
 
   const load = useCallback(() => {
     setLoading(true);
-    fetch("/api/map")
+    fetch(apiUrl("/map"))
       .then((r) => r.json())
       .then((d) => {
         if (Array.isArray(d.nodes)) setNodes(d.nodes);
@@ -115,7 +116,7 @@ export default function MapPage() {
 
   const runMap = async () => {
     setRunning(true);
-    await fetch("/api/map/run", { method: "POST" });
+    await fetch(apiUrl("/map/run"), { method: "POST" });
   };
 
   const megatrends = nodes.filter((n) => n.level === "megatrend");
@@ -130,7 +131,7 @@ export default function MapPage() {
       <PageHeader
         title="Our Trend Map"
         description="Our bottom-up map from world and US web evidence: megatrend to subtrends to ingredients, products, behaviours and psychographics. Every node cites its sources and every megatrend is compared against uploaded decks."
-        img="/subtrends/protein-0.png"
+        img="/subtrends/protein-0.webp"
         badge="Bottom-Up Map"
         stats={megatrends.length > 0 ? [
           { value: megatrends.length, label: "megatrends" },
@@ -143,10 +144,12 @@ export default function MapPage() {
                     className="rounded-lg border border-white/20 bg-white/10 px-3.5 py-2 text-sm font-medium text-white/80 backdrop-blur-sm hover:bg-white/20">
               Refresh
             </button>
-            <button onClick={runMap} disabled={running}
-                    className="rounded-lg bg-emerald-500 px-3.5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-emerald-400 disabled:opacity-50">
-              {running ? "Building…" : "▶ Build Map"}
-            </button>
+            {!HOSTED && (
+              <button onClick={runMap} disabled={running}
+                      className="rounded-lg bg-emerald-500 px-3.5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-emerald-400 disabled:opacity-50">
+                {running ? "Building…" : "▶ Build Map"}
+              </button>
+            )}
           </div>
         }
       />

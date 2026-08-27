@@ -1,4 +1,5 @@
 "use client";
+import { apiUrl, HOSTED } from "@/lib/api";
 
 import { useCallback, useEffect, useState } from "react";
 import { DiscoveredNode, DiscoverySource } from "@/lib/types";
@@ -203,7 +204,7 @@ export default function DiscoverPage() {
   const [periodWeeks, setPeriodWeeks] = useState(52);
 
   const load = useCallback(async () => {
-    const d = await fetch("/api/discover").then((r) => r.json());
+    const d = await fetch(apiUrl("/discover")).then((r) => r.json());
     if (Array.isArray(d)) setNodes(d);
   }, []);
 
@@ -218,7 +219,7 @@ export default function DiscoverPage() {
 
   async function trigger(kind: "discover") {
     setBusy(kind);
-    try { await fetch("/api/discover/run", { method: "POST" }); } catch { /* ignore */ }
+    try { await fetch(apiUrl("/discover/run"), { method: "POST" }); } catch { /* ignore */ }
   }
 
   function toggle(m: string) {
@@ -273,7 +274,7 @@ export default function DiscoverPage() {
       <PageHeader
         title="Web Discovery"
         description="Real products new in US retail, mapped against what Tyson makes. Plus per-megatrend web discoveries with Google Trends validation."
-        img="/subtrends/flavor-0.png"
+        img="/subtrends/flavor-0.webp"
         badge="Market Intelligence"
         stats={nodes.length > 0 ? [
           { value: usProducts.length, label: "new US products" },
@@ -290,10 +291,12 @@ export default function DiscoverPage() {
                 </button>
               ))}
             </div>
-            <button onClick={() => trigger("discover")} disabled={busy != null}
-              className="rounded-full bg-white px-4 py-2 text-sm font-semibold text-slate-900 shadow-sm hover:bg-slate-100 disabled:opacity-50">
-              {busy === "discover" ? "Discovering…" : "Discover from web"}
-            </button>
+            {!HOSTED && (
+              <button onClick={() => trigger("discover")} disabled={busy != null}
+                className="rounded-full bg-white px-4 py-2 text-sm font-semibold text-slate-900 shadow-sm hover:bg-slate-100 disabled:opacity-50">
+                {busy === "discover" ? "Discovering…" : "Discover from web"}
+              </button>
+            )}
           </div>
         }
       />

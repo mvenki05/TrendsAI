@@ -1,4 +1,5 @@
 "use client";
+import { apiUrl } from "@/lib/api";
 
 import { useCallback, useEffect, useState } from "react";
 import { PageHeader } from "@/components/page-header";
@@ -59,7 +60,7 @@ export default function TysonInsightsPage() {
 
   const load = useCallback(() => {
     setLoading(true);
-    fetch("/api/insights")
+    fetch(apiUrl("/insights"))
       .then((r) => r.json())
       .then((d) => {
         if (Array.isArray(d.themes)) setThemes(d.themes);
@@ -85,7 +86,7 @@ export default function TysonInsightsPage() {
       <PageHeader
         title="Tyson Bites: Combined Insights"
         description="One synthesized view across all monthly digests. Insights are clustered into themes by persistence and corroboration, with every survey stat and Tyson question bank preserved."
-        img="/subtrends/protein-1.png"
+        img="/subtrends/protein-1.webp"
         badge="Proprietary Intelligence"
         stats={themes.length > 0 ? [
           { value: themes.length, label: "combined themes" },

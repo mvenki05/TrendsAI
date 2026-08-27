@@ -1,4 +1,5 @@
 "use client";
+import { apiUrl } from "@/lib/api";
 
 import { useEffect, useState } from "react";
 
@@ -128,7 +129,7 @@ export default function MethodologyPage() {
   const [stats, setStats] = useState<Stats | null>(null);
 
   useEffect(() => {
-    fetch("/api/methodology").then((r) => r.json()).then((d) => { if (d.sources) setStats(d); }).catch(() => {});
+    fetch(apiUrl("/methodology")).then((r) => r.json()).then((d) => { if (d.sources) setStats(d); }).catch(() => {});
   }, []);
 
   const totalReports = stats?.sources.reduce((s, r) => s + r.reports, 0) ?? null;
