@@ -1,5 +1,5 @@
 "use client";
-import { apiUrl, assetUrl, HOSTED } from "@/lib/api";
+import { apiUrl, assetUrl } from "@/lib/api";
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
@@ -121,8 +121,9 @@ function citeKey(cite?: Cite | null): string | null {
 
 function citeHref(cite: Cite): string | null {
   if (cite.kind === "web" && cite.url) return cite.url;
-  // Source files live on local disk only — no file serving in the hosted build.
-  if (cite.report_id) return HOSTED ? null : `/api/file/${cite.report_id}${cite.page ? `#page=${cite.page}` : ""}`;
+  // Local: Next /api/file/[id] reads local disk. Hosted: FastAPI /api/trends/file/{id}
+  // streams the same document from GCS (pushed by src/push_sources_gcs.py).
+  if (cite.report_id) return apiUrl(`/file/${cite.report_id}${cite.page ? `#page=${cite.page}` : ""}`);
   return null;
 }
 
@@ -817,17 +818,11 @@ export default function CodexPage() {
                   {dossier.sources?.map((s, i) => (
                     s.report_id ? (
                       <span key={i} className="inline-flex items-center gap-1">
-                        {HOSTED ? (
-                          <span className={`rounded-lg px-2.5 py-1.5 text-[13px] font-semibold ${TAG_STYLE[s.source_tag ?? ""] ?? "bg-slate-100 text-slate-600"}`}>
-                            📄 {s.label}
-                          </span>
-                        ) : (
-                          <a href={`/api/file/${s.report_id}`} target="_blank" rel="noreferrer"
-                             className={`rounded-lg px-2.5 py-1.5 text-[13px] font-semibold hover:opacity-75 ${TAG_STYLE[s.source_tag ?? ""] ?? "bg-slate-100 text-slate-600"}`}
-                             title="Open the original document">
-                            📄 {s.label}
-                          </a>
-                        )}
+                        <a href={apiUrl(`/file/${s.report_id}`)} target="_blank" rel="noreferrer"
+                           className={`rounded-lg px-2.5 py-1.5 text-[13px] font-semibold hover:opacity-75 ${TAG_STYLE[s.source_tag ?? ""] ?? "bg-slate-100 text-slate-600"}`}
+                           title="Open the original document">
+                          📄 {s.label}
+                        </a>
                         <Link href={`/report?id=${s.report_id}`}
                               className="rounded-md bg-slate-50 px-1.5 py-1.5 text-[11px] font-medium text-slate-400 hover:text-slate-600"
                               title="Open the extracted view in TrendLens">
