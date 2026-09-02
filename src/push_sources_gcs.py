@@ -65,6 +65,18 @@ def main() -> None:
     bucket = storage.Client(project=BUCKET_PROJECT).bucket(BUCKET)
     uploaded = skipped = missing = 0
     missing_names: list[str] = []
+
+    def _push(local: Path, blob_name: str) -> bool:
+        blob = bucket.blob(blob_name)
+        if blob.exists():
+            blob.reload()
+            if blob.size == local.stat().st_size:
+                return False
+        if not args.dry_run:
+            blob.upload_from_filename(str(local))
+        log.info("  up: %s <- %s", blob_name, local.name)
+        return True
+
     for r in rows:
         local = next((p for p in _candidates(r.report_id, r.filename, r.sharepoint_path)
                       if p.is_file()), None)
@@ -73,15 +85,15 @@ def main() -> None:
             missing_names.append(f"{r.report_id}  {r.filename}")
             continue
         ext = Path(r.filename).suffix.lower()
-        blob = bucket.blob(f"sources/{r.report_id}{ext}")
-        blob.reload() if blob.exists() else None
-        if blob.exists() and blob.size == local.stat().st_size:
+        if _push(local, f"sources/{r.report_id}{ext}"):
+            uploaded += 1
+        else:
             skipped += 1
-            continue
-        if not args.dry_run:
-            blob.upload_from_filename(str(local))
-        uploaded += 1
-        log.info("  up: %s <- %s", blob.name, local.name)
+        # PPTX decks may have a converted PDF rendition — the hosted backend
+        # prefers it (inline render + #page= deep links, like the local route).
+        rendition = ROOT / "uploads" / f"{r.report_id}.pdf"
+        if ext == ".pptx" and rendition.is_file():
+            _push(rendition, f"sources/{r.report_id}.pdf")
 
     log.info("Done: %d uploaded, %d already current, %d/%d missing locally.",
              uploaded, skipped, missing, len(rows))
