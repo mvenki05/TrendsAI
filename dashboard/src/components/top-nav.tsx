@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
+import { HOSTED } from "@/lib/api";
 
 const NAV_ITEMS = [
   { href: "/",         label: "Home",            match: (p: string) => p === "/" },
@@ -90,6 +91,17 @@ export function TopNav() {
           )}
         </div>
       </div>
+
+      {!HOSTED && (
+        <button
+          onClick={() => window.dispatchEvent(new CustomEvent("open-global-search"))}
+          className="absolute right-4 flex items-center gap-1.5 rounded-full border border-slate-200 px-3 py-1.5 text-[12px] font-medium text-slate-400 transition-colors hover:border-slate-300 hover:text-slate-600"
+        >
+          <span>🔍</span>
+          <span className="hidden sm:inline">Search</span>
+          <kbd className="hidden rounded border border-slate-200 bg-slate-50 px-1 text-[9px] font-semibold text-slate-400 sm:inline">⌘K</kbd>
+        </button>
+      )}
     </nav>
   );
 }

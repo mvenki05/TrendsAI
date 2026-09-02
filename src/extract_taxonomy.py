@@ -30,7 +30,7 @@ from pathlib import Path
 from pptx import Presentation
 from pypdf import PdfReader
 
-from src.common import bq_client, complete_json, dataset_ref, load_json_rows
+from src.common import bq_client, complete_json, dataset_ref, ensure_pdf_rendition, load_json_rows
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 logger = logging.getLogger(__name__)
@@ -327,6 +327,8 @@ def run(file_path: str, report_id: str | None = None, filename: str | None = Non
     logger.info("Extracted %d chars from %s (%s)", len(text), display_name, source_type)
 
     report_id = report_id or f"rep_{uuid.uuid4().hex[:12]}"
+    if source_type == "pptx":
+        ensure_pdf_rendition(report_id, path)
     text_hash = hashlib.sha256(text.encode("utf-8")).hexdigest()
     client = bq_client()
     project_id, dataset_id = dataset_ref()

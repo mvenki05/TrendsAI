@@ -75,6 +75,42 @@ def complete_json(prompt: str, max_tokens: int | None = None, temperature: float
     return parse_llm_json(text)
 
 
+def ensure_pdf_rendition(report_id: str, source_path: Path) -> None:
+    """For a .pptx source, create uploads/<report_id>.pdf alongside it so citations can
+    deep-link #page=N (browsers can't anchor into a PPTX — see /api/file/[id] and
+    scripts/backfill_cite_pages.py, both of which prefer this rendition when present).
+    Best-effort: requires Windows + a local PowerPoint install (via pywin32 COM). Silently
+    no-ops elsewhere (e.g. the hosted Linux deployment) — citations just won't be page-anchored.
+    """
+    if source_path.suffix.lower() != ".pptx":
+        return
+    source_path = source_path.resolve()
+    uploads_dir = source_path.parent if source_path.parent.name == "uploads" else (Path(__file__).parent.parent / "uploads").resolve()
+    dest = uploads_dir / f"{report_id}.pdf"
+    if dest.exists():
+        return
+    try:
+        import win32com.client
+    except ImportError:
+        logger.info("pywin32 not available — skipping PDF rendition for %s", source_path.name)
+        return
+    try:
+        ppt = win32com.client.DispatchEx("PowerPoint.Application")
+        try:
+            # COM SaveAs requires an absolute path — a relative one fails with a
+            # "couldn't find <path>" error since PowerPoint's own CWD isn't ours.
+            pres = ppt.Presentations.Open(str(source_path), WithWindow=False)
+            pres.SaveAs(str(dest), 32)  # 32 = ppSaveAsPDF
+            pres.Close()
+            if not dest.exists():
+                raise RuntimeError("SaveAs reported success but no output file was written")
+            logger.info("Converted %s -> %s for page-anchored citations", source_path.name, dest.name)
+        finally:
+            ppt.Quit()
+    except Exception as e:
+        logger.warning("PPTX->PDF conversion failed for %s: %s", source_path.name, e)
+
+
 def load_json_rows(client: bigquery.Client, table_ref: str, rows: list[dict], replace: bool = False) -> None:
     """Append rows via a load job (not streaming) so DELETEs aren't blocked by the buffer.
     With replace=True the load atomically truncates + writes (no empty-table window on failure)."""
