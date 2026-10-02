@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
 import { spawn } from "child_process";
+import { PYTHON_BIN } from "@/lib/python-bin";
 import { randomBytes } from "crypto";
 import { query, DATASET, PROJECT_ID } from "@/lib/bigquery";
 
@@ -43,7 +44,7 @@ export async function POST(req: Request) {
 
     // Run the extract -> measure -> synthesize pipeline detached so the request returns fast.
     // Pass the original filename so the report records it (and stays dedupe-able by name).
-    const py = spawn("python", ["-m", "src.pipeline", dest, reportId, file.name], {
+    const py = spawn(PYTHON_BIN, ["-m", "src.pipeline", dest, reportId, file.name], {
       cwd: root,
       detached: true,
       stdio: "ignore",

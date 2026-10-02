@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { apiUrl } from "@/lib/api";
 
 interface SearchResult {
-  type: "codex" | "report" | "node" | "idea" | "lab" | "map" | "theme" | "discovery";
+  type: "codex" | "report" | "node" | "lab" | "map" | "discovery";
   title: string;
   subtitle?: string;
   href: string;
@@ -16,12 +16,10 @@ const GROUPS: Record<SearchResult["type"], { label: string; icon: string }> = {
   report: { label: "Reports", icon: "▣" },
   node: { label: "Report sections", icon: "🌱" },
   map: { label: "Trend Map", icon: "🗺️" },
-  idea: { label: "Innovation Ideas", icon: "💡" },
   lab: { label: "White Space", icon: "🔭" },
-  discovery: { label: "Web Discovery", icon: "🔍" },
-  theme: { label: "Tyson Bites", icon: "🐔" },
+  discovery: { label: "Discover", icon: "🔍" },
 };
-const GROUP_ORDER: SearchResult["type"][] = ["codex", "report", "node", "map", "idea", "lab", "discovery", "theme"];
+const GROUP_ORDER: SearchResult["type"][] = ["codex", "report", "node", "map", "lab", "discovery"];
 
 export function GlobalSearch() {
   const [open, setOpen] = useState(false);
@@ -107,7 +105,7 @@ export function GlobalSearch() {
             value={term}
             onChange={(e) => setTerm(e.target.value)}
             onKeyDown={onInputKeyDown}
-            placeholder="Search megatrends, reports, ideas, subtrends…"
+            placeholder="Search megatrends, reports, subtrends…"
             className="w-full bg-transparent text-[14px] text-slate-800 placeholder:text-slate-400 focus:outline-none"
           />
           <kbd className="rounded border border-slate-200 bg-slate-50 px-1.5 py-0.5 text-[10px] font-medium text-slate-400">Esc</kbd>

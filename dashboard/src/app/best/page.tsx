@@ -5,6 +5,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { PresentMode } from "@/components/present-mode";
+import { CiteLink } from "@/components/cite-link";
+import { type Cite, type CitedSegment, citeKey, citeHref, createRefTracker } from "@/lib/citations";
 
 // Scroll-reveal: content glides up into place the first time it enters the viewport.
 function Reveal({ children, className }: { children: React.ReactNode; className?: string }) {
@@ -28,14 +30,6 @@ function Reveal({ children, className }: { children: React.ReactNode; className?
   );
 }
 
-interface Cite {
-  kind: "report" | "web";
-  report_id?: string;
-  url?: string;
-  label?: string;
-  page?: number;
-}
-
 interface Opportunity {
   name: string;
   concept: string;
@@ -43,8 +37,6 @@ interface Opportunity {
   builds_on?: string[];
   tyson_fit?: { category?: string; tier?: "Core" | "Adjacent" | "Stretch"; reason?: string };
 }
-
-interface CitedSegment { text: string; cite?: Cite | null }
 
 interface Dossier {
   key: string;
@@ -109,49 +101,6 @@ function stripBrand(name: string, brand?: string | null): string {
     return name.slice(prefix.length).replace(/^[\s–\-:]+/, "").trim();
   }
   return name;
-}
-
-// Stable identity for a citation: same doc+page (or same URL) = same reference number.
-function citeKey(cite?: Cite | null): string | null {
-  if (!cite) return null;
-  if (cite.kind === "web" && cite.url) return `w|${cite.url}`;
-  if (cite.report_id) return `r|${cite.report_id}|${cite.page ?? ""}`;
-  return null;
-}
-
-function citeHref(cite: Cite): string | null {
-  if (cite.kind === "web" && cite.url) return cite.url;
-  // Local: Next /api/file/[id] reads local disk. Hosted: FastAPI /api/trends/file/{id}
-  // streams the same document from GCS (pushed by src/push_sources_gcs.py).
-  if (cite.report_id) return apiUrl(`/file/${cite.report_id}${cite.page ? `#page=${cite.page}` : ""}`);
-  return null;
-}
-
-// Numbered superscript reference, academic style: [3]. Click opens the source directly;
-// the full listing lives in the numbered References section at the bottom of the dossier.
-function CiteLink({ cite, refNo }: { cite?: Cite; refNo?: number }) {
-  if (!cite) return null;
-  const href = citeHref(cite);
-  const title = cite.kind === "web"
-    ? `${cite.label || "External source"} — ${cite.url}`
-    : `${cite.label || "Source document"}${cite.page ? ` · page ${cite.page}` : ""}`;
-  if (href && refNo) {
-    return (
-      <a href={href} target="_blank" rel="noreferrer" title={title}
-         className="align-super text-[10.5px] font-extrabold text-sky-600 hover:text-sky-800 hover:underline">
-        [{refNo}]
-      </a>
-    );
-  }
-  if (href) {
-    return (
-      <a href={href} target="_blank" rel="noreferrer" title={title}
-         className="inline-flex items-center gap-0.5 rounded bg-slate-100 px-1.5 py-0.5 text-[11px] font-semibold text-slate-600 hover:bg-slate-200">
-        {cite.kind === "web" ? "↗" : "📄"} {cite.label || "source"}
-      </a>
-    );
-  }
-  return <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[11px] text-slate-500">{cite.label}</span>;
 }
 
 // Editorial numbered section header: "01 — EYEBROW" over a serif title.
@@ -230,15 +179,8 @@ export default function CodexPage() {
 
   // Numbered references, assigned in display order (horizons → subtrends → stats → whitespace).
   // Same document+page (or URL) always resolves to the same number.
-  const refMap = new Map<string, number>();
-  const refList: { n: number; cite: Cite }[] = [];
+  const { add, refFor, list: refList } = createRefTracker();
   if (dossier) {
-    const add = (c?: Cite) => {
-      const k = citeKey(c);
-      if (!k || !c || refMap.has(k)) return;
-      refMap.set(k, refMap.size + 1);
-      refList.push({ n: refMap.size, cite: c });
-    };
     dossier.definition_cited?.forEach((s) => s.cite && add(s.cite));
     dossier.now_cited?.forEach((s) => s.cite && add(s.cite));
     (["short", "medium", "long"] as const).forEach((h) => dossier.horizons?.[h]?.forEach((i) => add(i.cite)));
@@ -247,7 +189,6 @@ export default function CodexPage() {
     dossier.tyson_questions?.forEach((q) => { if (typeof q !== "string" && q.cite) add(q.cite); });
     dossier.whitespace?.forEach((w) => add(w.cite));
   }
-  const refFor = (c?: Cite) => { const k = citeKey(c); return k ? refMap.get(k) : undefined; };
 
   // Prose with inline evidence: renders cited segments with [n] superscripts (falls back to plain text).
   const CitedProse = ({ segments, fallback, dark = false }: { segments?: CitedSegment[]; fallback: string; dark?: boolean }) => {

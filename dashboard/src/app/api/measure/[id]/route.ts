@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import path from "path";
 import { spawn } from "child_process";
+import { PYTHON_BIN } from "@/lib/python-bin";
 
 export const runtime = "nodejs";
 
@@ -12,7 +13,7 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
       return NextResponse.json({ error: "Invalid report id" }, { status: 400 });
     }
     const root = path.join(process.cwd(), "..");
-    const py = spawn("python", ["-m", "src.map_searches", id], {
+    const py = spawn(PYTHON_BIN, ["-m", "src.map_searches", id], {
       cwd: root,
       detached: true,
       stdio: "ignore",

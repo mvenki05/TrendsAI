@@ -6,28 +6,30 @@ import { PYTHON_BIN } from "@/lib/python-bin";
 export const runtime = "nodejs";
 export const maxDuration = 900;
 
-// Trigger web discovery (--validate measures Google Trends growth on discovered terms)
-// and wait for it to actually finish, instead of firing detached with stdio:"ignore" and
-// returning a status that says nothing about whether it succeeded (same dead-end pattern
-// /api/map/run and /api/lab/run had — fixed here the same way).
+// Re-measures every Codex dossier's Google Trends demand terms via a real browser
+// (scripts/refresh_codex_demand.py --apply) and waits for it to finish — this is a
+// ~5-10 min operation (one Playwright request per term, deliberately paced so Google
+// doesn't throttle it), so callers should expect the request itself to be slow.
+//
+// A module-level lock prevents two overlapping runs: the script does a
+// WRITE_TRUNCATE replace of the whole codex_megatrends table at the end, so a second
+// run finishing first would have its update clobbered by the first run's stale write.
 let running = false;
 
-export async function POST(req: Request) {
+export async function POST() {
   if (running) {
     return NextResponse.json(
-      { status: "error", error: "A discovery run is already in progress — wait for it to finish." },
+      { status: "error", error: "A demand refresh is already running — wait for it to finish." },
       { status: 409 },
     );
   }
   running = true;
 
   try {
-    const { searchParams } = new URL(req.url);
-    const validate = searchParams.get("validate") === "1";
-    const args = validate ? ["-m", "src.discover_web", "--validate"] : ["-m", "src.discover_web"];
-
     const { code, output } = await new Promise<{ code: number | null; output: string }>((resolve) => {
-      const py = spawn(PYTHON_BIN, args, { cwd: path.join(process.cwd(), "..") });
+      const py = spawn(PYTHON_BIN, ["-m", "scripts.refresh_codex_demand", "--apply"], {
+        cwd: path.join(process.cwd(), ".."),
+      });
       let output = "";
       py.stdout.on("data", (d) => { output += d.toString(); });
       py.stderr.on("data", (d) => { output += d.toString(); });
@@ -43,8 +45,8 @@ export async function POST(req: Request) {
     return NextResponse.json({
       status: "error",
       error: noKey
-        ? "Discovery failed: LiteLLM isn't configured on this server, so the extraction LLM steps can't run."
-        : "Discovery failed — see output.",
+        ? "Refresh failed: LiteLLM isn't configured on this server, so the demand-summary rewrite can't run."
+        : "Refresh failed — see output.",
       output: output.slice(-3000),
     }, { status: 500 });
   } finally {
