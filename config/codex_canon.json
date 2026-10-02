@@ -1,0 +1,32 @@
+{
+  "protein": {
+    "search_terms": ["protein"]
+  },
+  "social": {
+    "search_terms": ["social media", "tiktok", "viral", "artificial intelligence"]
+  },
+  "flavor": {
+    "search_terms": ["flavor", "flavour", "spice", "seasoning"]
+  },
+  "value": {
+    "search_terms": ["private label", "trading down", "value meal", "budget"]
+  },
+  "functional": {
+    "search_terms": ["functional food", "gut health", "fiber", "probiotic"]
+  },
+  "convenience": {
+    "search_terms": ["convenience", "meal kit", "ready to eat", "quick meal"]
+  },
+  "cleanlabel": {
+    "search_terms": ["clean label", "ultra processed", "ingredient transparency"]
+  },
+  "blur": {
+    "search_terms": ["snacking", "all day snacking", "daypart"]
+  },
+  "conscious": {
+    "search_terms": ["sustainability", "regenerative", "food waste", "animal welfare"]
+  },
+  "glp1": {
+    "search_terms": ["GLP 1", "ozempic", "wegovy", "weight loss drug"]
+  }
+}

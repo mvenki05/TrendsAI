@@ -41,16 +41,19 @@ _NUM_RE = re.compile(r"\$?\d+(?:[.,]\d+)?%?")
 _WORD_RE = re.compile(r"[a-z]{4,}")
 
 
-def _resolve_pdf(report_id: str, filename: str) -> Path | None:
+def _resolve_pdf(report_id: str, filename: str, sharepoint_path: str | None) -> Path | None:
     """Mirror the /api/file/[id] route's candidate order; PDFs only (#page= anchors
-    don't work for PPTX, which browsers download instead of rendering)."""
+    don't work for PPTX, which browsers download instead of rendering — but a
+    converted uploads/<id>.pdf rendition of a PPTX deck counts as a PDF here)."""
     ext = Path(filename).suffix.lower()
     candidates = [
+        ROOT / "uploads" / f"{report_id}.pdf",  # converted rendition, if a PPTX has one
         ROOT / "uploads" / f"{report_id}{ext}",
         ROOT / "uploads" / filename,
         ROOT / "uploads" / "mintel" / filename,
         ROOT / "uploads" / "tyson" / filename,
         ROOT / "docs" / filename,
+        *([Path(sharepoint_path)] if sharepoint_path else []),
     ]
     for p in candidates:
         if p.suffix.lower() == ".pdf" and p.exists():
@@ -103,6 +106,10 @@ def _cite_sites(dossier: dict) -> list[tuple[str, str, dict]]:
         if cite and cite.get("kind") == "report" and cite.get("report_id"):
             sites.append((label, context, cite))
 
+    for seg in dossier.get("definition_cited") or []:
+        add("definition", seg.get("text") or "", seg.get("cite"))
+    for seg in dossier.get("now_cited") or []:
+        add("now", seg.get("text") or "", seg.get("cite"))
     for ks in dossier.get("key_stats") or []:
         add("key_stat", ks.get("stat") or "", ks.get("cite"))
     for st in dossier.get("subtrends") or []:
@@ -128,6 +135,12 @@ def main() -> None:
         r["report_id"]: r["filename"]
         for r in client.query(f"SELECT report_id, filename FROM `{project_id}.{dataset}.reports`").result()
     }
+    sharepoint_paths = {
+        r["report_id"]: r["file_path"]
+        for r in client.query(
+            f"SELECT report_id, file_path FROM `{project_id}.{dataset}.sharepoint_files` WHERE report_id IS NOT NULL"
+        ).result()
+    }
     rows = list(client.query(
         f"SELECT `key`, dossier FROM `{project_id}.{dataset}.codex_megatrends` WHERE dossier IS NOT NULL"
     ).result())
@@ -137,7 +150,7 @@ def main() -> None:
     def pages_for(rid: str) -> list[str] | None:
         if rid not in page_cache:
             fname = reports.get(rid)
-            pdf = _resolve_pdf(rid, fname) if fname else None
+            pdf = _resolve_pdf(rid, fname, sharepoint_paths.get(rid)) if fname else None
             page_cache[rid] = _page_texts(pdf) if pdf else None
             if page_cache[rid] is None:
                 logger.warning("No local PDF for %s (%s) — cites left whole-document", rid, fname)

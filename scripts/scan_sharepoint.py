@@ -31,9 +31,15 @@ logger = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 WATCH_FOLDERS: list[dict] = [
     {
+        # Central SharePoint drop folder — anyone on the team can put trend reports here
+        "path": r"C:\Users\mandapative\OneDrive - Tyson Online\General - Marketing Analytics\Trend Reports",
+        "label": "Trend Reports (SharePoint Central)",
+        "recurse": True,
+    },
+    {
         "path": r"C:\Users\mandapative\OneDrive - Tyson Online\General - Marketing Analytics\108. Category Shopper Insights\1. Secondary Resource Library",
         "label": "Secondary Resource Library",
-        "recurse": False,   # set True to also scan subfolders
+        "recurse": False,
     },
 ]
 

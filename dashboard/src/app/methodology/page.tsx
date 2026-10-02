@@ -1,4 +1,5 @@
 "use client";
+import { apiUrl } from "@/lib/api";
 
 import { useEffect, useState } from "react";
 
@@ -30,6 +31,13 @@ const SOURCE_META: Record<string, { name: string; desc: string; color: string; b
     color: "border-emerald-200 bg-emerald-50",
     badge: "bg-emerald-100 text-emerald-700",
     icon: "🐔",
+  },
+  hartman: {
+    name: "Hartman Group",
+    desc: "Occasion-research and ethnographic food-culture studies from The Hartman Group, covering how and why Americans eat across dayparts and life stages.",
+    color: "border-purple-200 bg-purple-50",
+    badge: "bg-purple-100 text-purple-700",
+    icon: "🔬",
   },
 };
 
@@ -121,7 +129,7 @@ export default function MethodologyPage() {
   const [stats, setStats] = useState<Stats | null>(null);
 
   useEffect(() => {
-    fetch("/api/methodology").then((r) => r.json()).then((d) => { if (d.sources) setStats(d); }).catch(() => {});
+    fetch(apiUrl("/methodology")).then((r) => r.json()).then((d) => { if (d.sources) setStats(d); }).catch(() => {});
   }, []);
 
   const totalReports = stats?.sources.reduce((s, r) => s + r.reports, 0) ?? null;
@@ -151,7 +159,7 @@ export default function MethodologyPage() {
         {/* Live stat tiles */}
         {stats && (
           <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <StatTile value={totalReports ?? "—"} label="Source reports" sub="across 4 providers" />
+            <StatTile value={totalReports ?? "—"} label="Source reports" sub={`across ${stats.sources.length} providers`} />
             <StatTile value={totalNodes ?? "—"} label="Extracted items" sub="products, trends, behaviours" />
             <StatTile value={stats.measures.measured_terms} label="Terms measured" sub="via Google Trends" />
             <StatTile value={stats.synthesis.dossiers} label="Megatrend dossiers" sub="canonical megatrends" />

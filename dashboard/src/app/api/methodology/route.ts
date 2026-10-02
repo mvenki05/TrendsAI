@@ -28,6 +28,7 @@ export async function GET() {
           (SELECT COUNT(*) FROM \`${PROJECT_ID}.${DATASET}.tyson_products\`) AS tyson_skus
       `),
     ]);
+
     return NextResponse.json({ sources, measures: measures[0], synthesis: synthesis[0] });
   } catch (error) {
     console.error("Methodology stats failed:", error);

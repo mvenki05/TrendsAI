@@ -217,6 +217,32 @@ TABLES: dict[str, list[bigquery.SchemaField]] = {
         bigquery.SchemaField("first_seen",    "TIMESTAMP", mode="REQUIRED",    description="When the scanner first found this file"),
         bigquery.SchemaField("last_scanned",  "TIMESTAMP", mode="REQUIRED",    description="When the scanner last saw this file"),
     ],
+    "chat_logs": [
+        bigquery.SchemaField("chat_id", "STRING", mode="REQUIRED", description="Unique id for this Q&A exchange"),
+        bigquery.SchemaField("question", "STRING", mode="REQUIRED", description="The user's question, verbatim"),
+        bigquery.SchemaField("answer", "STRING", mode="NULLABLE", description="The final assistant answer (markdown, before citation formatting)"),
+        bigquery.SchemaField("tools_used", "STRING", mode="REPEATED", description="Names of the retrieval tools Claude called while answering"),
+        bigquery.SchemaField("citation_count", "INT64", mode="NULLABLE", description="Number of distinct citations in the answer"),
+        bigquery.SchemaField("error", "STRING", mode="NULLABLE", description="Set if the exchange failed (e.g. gateway/timeout error) instead of producing an answer"),
+        bigquery.SchemaField("created_at", "TIMESTAMP", mode="REQUIRED", description="When the exchange completed"),
+    ],
+    "chat_trend_lookups": [
+        bigquery.SchemaField("term", "STRING", mode="REQUIRED", description="The exact term measured (cache key, report-independent)"),
+        bigquery.SchemaField("current_interest", "INT64", mode="NULLABLE", description="Recent 4-week avg Google Trends interest (0-100)"),
+        bigquery.SchemaField("yoy_growth", "FLOAT64", mode="NULLABLE", description="Year-over-year % change in interest"),
+        bigquery.SchemaField("is_rising", "BOOL", mode="NULLABLE", description="True if meaningfully growing YoY"),
+        bigquery.SchemaField("classification", "STRING", mode="NULLABLE", description="trend_math.analyze() verdict: rising-accelerating / rising-maturing / volatile-fad / declining / flat / low-base / no-data"),
+        bigquery.SchemaField("interest_series", "STRING", mode="NULLABLE", description="JSON array of weekly interest ints (0-100, last 12 months)"),
+        bigquery.SchemaField("asked_by", "STRING", mode="NULLABLE", description="Who/what requested this on-demand measurement, e.g. a chat question"),
+        bigquery.SchemaField("measured_at", "TIMESTAMP", mode="REQUIRED", description="When this on-demand Google Trends pull ran"),
+    ],
+    "report_text_chunks": [
+        bigquery.SchemaField("report_id", "STRING", mode="REQUIRED", description="Links to reports.report_id"),
+        bigquery.SchemaField("chunk_index", "INT64", mode="REQUIRED", description="Order within the report (0-based)"),
+        bigquery.SchemaField("page", "INT64", mode="NULLABLE", description="PDF page / PPTX slide number this chunk came from (matches /api/file/[id]#page=N)"),
+        bigquery.SchemaField("text", "STRING", mode="REQUIRED", description="Raw extracted text for this page/slide, for full-text passage search (Ask TrendLens chat)"),
+        bigquery.SchemaField("indexed_at", "TIMESTAMP", mode="REQUIRED", description="When this chunk was (re-)extracted"),
+    ],
     "megatrend_clusters": [
         bigquery.SchemaField("cluster_id", "STRING", mode="REQUIRED", description="Unique cluster id"),
         bigquery.SchemaField("cluster_name", "STRING", mode="REQUIRED", description="Canonical megatrend name across files"),
@@ -245,6 +271,9 @@ TABLE_CONFIG: dict[str, dict] = {
     "lab_ideas": {"partition_field": "created_at", "partition_type": "MONTH", "clustering_fields": ["run_id"]},
     "lab_subtrends": {"partition_field": "created_at", "partition_type": "MONTH", "clustering_fields": ["subtrend_id"]},
     "trend_map_nodes": {"partition_field": "created_at", "partition_type": "MONTH", "clustering_fields": ["level", "megatrend_name"]},
+    "chat_logs": {"partition_field": "created_at", "partition_type": "MONTH", "clustering_fields": ["chat_id"]},
+    "report_text_chunks": {"partition_field": "indexed_at", "partition_type": "MONTH", "clustering_fields": ["report_id"]},
+    "chat_trend_lookups": {"partition_field": "measured_at", "partition_type": "MONTH", "clustering_fields": ["term"]},
 }
 
 # Legacy tables removed in teardowns (TrendPulse originals + the retired bottom-up Trend Lab).

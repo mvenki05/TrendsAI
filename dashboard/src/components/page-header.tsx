@@ -1,3 +1,5 @@
+import { assetUrl } from "@/lib/api";
+
 interface Stat { value: string | number; label: string }
 
 interface PageHeaderProps {
@@ -13,7 +15,7 @@ export function PageHeader({ title, description, img, badge, stats, actions }: P
   return (
     <div className="relative overflow-hidden border-b border-slate-200 bg-slate-950">
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={img} alt="" className="absolute inset-0 h-full w-full object-cover opacity-25 transition duration-700" />
+      <img src={assetUrl(img)} alt="" className="absolute inset-0 h-full w-full object-cover opacity-25 transition duration-700" />
       <div className="absolute inset-0 bg-gradient-to-r from-slate-950/95 via-slate-900/80 to-slate-800/40" />
 
       <div className="relative px-8 py-10 lg:px-12">

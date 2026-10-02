@@ -1,9 +1,12 @@
 "use client";
+import { apiUrl, assetUrl } from "@/lib/api";
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { PresentMode } from "@/components/present-mode";
+import { CiteLink } from "@/components/cite-link";
+import { type Cite, type CitedSegment, citeKey, citeHref, createRefTracker } from "@/lib/citations";
 
 // Scroll-reveal: content glides up into place the first time it enters the viewport.
 function Reveal({ children, className }: { children: React.ReactNode; className?: string }) {
@@ -27,14 +30,6 @@ function Reveal({ children, className }: { children: React.ReactNode; className?
   );
 }
 
-interface Cite {
-  kind: "report" | "web";
-  report_id?: string;
-  url?: string;
-  label?: string;
-  page?: number;
-}
-
 interface Opportunity {
   name: string;
   concept: string;
@@ -42,8 +37,6 @@ interface Opportunity {
   builds_on?: string[];
   tyson_fit?: { category?: string; tier?: "Core" | "Adjacent" | "Stretch"; reason?: string };
 }
-
-interface CitedSegment { text: string; cite?: Cite | null }
 
 interface Dossier {
   key: string;
@@ -100,45 +93,14 @@ const TIER_STYLE: Record<string, { badge: string; icon: string }> = {
   Stretch:  { badge: "bg-orange-100 text-orange-700", icon: "⚑" },
 };
 
-// Stable identity for a citation: same doc+page (or same URL) = same reference number.
-function citeKey(cite?: Cite): string | null {
-  if (!cite) return null;
-  if (cite.kind === "web" && cite.url) return `w|${cite.url}`;
-  if (cite.report_id) return `r|${cite.report_id}|${cite.page ?? ""}`;
-  return null;
-}
-
-function citeHref(cite: Cite): string | null {
-  if (cite.kind === "web" && cite.url) return cite.url;
-  if (cite.report_id) return `/api/file/${cite.report_id}${cite.page ? `#page=${cite.page}` : ""}`;
-  return null;
-}
-
-// Numbered superscript reference, academic style: [3]. Click opens the source directly;
-// the full listing lives in the numbered References section at the bottom of the dossier.
-function CiteLink({ cite, refNo }: { cite?: Cite; refNo?: number }) {
-  if (!cite) return null;
-  const href = citeHref(cite);
-  const title = cite.kind === "web"
-    ? `${cite.label || "External source"} — ${cite.url}`
-    : `${cite.label || "Source document"}${cite.page ? ` · page ${cite.page}` : ""}`;
-  if (href && refNo) {
-    return (
-      <a href={href} target="_blank" rel="noreferrer" title={title}
-         className="align-super text-[10.5px] font-extrabold text-sky-600 hover:text-sky-800 hover:underline">
-        [{refNo}]
-      </a>
-    );
+// Strip a known brand prefix from an idea name so concept cards don't lead with brand names.
+function stripBrand(name: string, brand?: string | null): string {
+  if (!brand) return name;
+  const prefix = brand.trim();
+  if (name.toLowerCase().startsWith(prefix.toLowerCase())) {
+    return name.slice(prefix.length).replace(/^[\s–\-:]+/, "").trim();
   }
-  if (href) {
-    return (
-      <a href={href} target="_blank" rel="noreferrer" title={title}
-         className="inline-flex items-center gap-0.5 rounded bg-slate-100 px-1.5 py-0.5 text-[11px] font-semibold text-slate-600 hover:bg-slate-200">
-        {cite.kind === "web" ? "↗" : "📄"} {cite.label || "source"}
-      </a>
-    );
-  }
-  return <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[11px] text-slate-500">{cite.label}</span>;
+  return name;
 }
 
 // Editorial numbered section header: "01 — EYEBROW" over a serif title.
@@ -148,13 +110,13 @@ function SectionTitle({ children, tone = "text-slate-900" }: {
   return <h3 className={`text-[26px] font-semibold tracking-tight ${tone}`}>{children}</h3>;
 }
 
-function HorizonColumn({ title, sub, items, accent, tone, refFor }: {
-  title: string; sub: string; accent: string; tone: string;
+function HorizonColumn({ title, sub, items, tone, refFor }: {
+  title: string; sub: string; tone: string;
   items: { title: string; detail: string; rationale: string; cite?: Cite }[];
   refFor: (c?: Cite) => number | undefined;
 }) {
   return (
-    <div className={`rounded-2xl border border-slate-200 border-t-4 bg-white p-6 shadow-sm ${accent}`}>
+    <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
       <div className="flex items-baseline justify-between gap-2">
         <div className={`font-display text-2xl font-semibold ${tone}`}>{title}</div>
         <div className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400">{sub}</div>
@@ -197,12 +159,13 @@ export default function CodexPage() {
   };
 
   const load = useCallback(() => {
-    fetch("/api/codex")
+    const keyParam = new URLSearchParams(window.location.search).get("key");
+    fetch(apiUrl("/codex"))
       .then((r) => r.json())
       .then((d) => {
         if (Array.isArray(d.megatrends)) {
           setRows(d.megatrends);
-          if (d.megatrends.length > 0) setSelected((s) => s ?? d.megatrends[0].key);
+          if (d.megatrends.length > 0) setSelected((s) => s ?? keyParam ?? d.megatrends[0].key);
         }
       })
       .finally(() => setLoading(false));
@@ -216,15 +179,8 @@ export default function CodexPage() {
 
   // Numbered references, assigned in display order (horizons → subtrends → stats → whitespace).
   // Same document+page (or URL) always resolves to the same number.
-  const refMap = new Map<string, number>();
-  const refList: { n: number; cite: Cite }[] = [];
+  const { add, refFor, list: refList } = createRefTracker();
   if (dossier) {
-    const add = (c?: Cite) => {
-      const k = citeKey(c);
-      if (!k || !c || refMap.has(k)) return;
-      refMap.set(k, refMap.size + 1);
-      refList.push({ n: refMap.size, cite: c });
-    };
     dossier.definition_cited?.forEach((s) => s.cite && add(s.cite));
     dossier.now_cited?.forEach((s) => s.cite && add(s.cite));
     (["short", "medium", "long"] as const).forEach((h) => dossier.horizons?.[h]?.forEach((i) => add(i.cite)));
@@ -233,7 +189,6 @@ export default function CodexPage() {
     dossier.tyson_questions?.forEach((q) => { if (typeof q !== "string" && q.cite) add(q.cite); });
     dossier.whitespace?.forEach((w) => add(w.cite));
   }
-  const refFor = (c?: Cite) => { const k = citeKey(c); return k ? refMap.get(k) : undefined; };
 
   // Prose with inline evidence: renders cited segments with [n] superscripts (falls back to plain text).
   const CitedProse = ({ segments, fallback, dark = false }: { segments?: CitedSegment[]; fallback: string; dark?: boolean }) => {
@@ -243,10 +198,13 @@ export default function CodexPage() {
         {segments.map((seg, i) => {
           const n = seg.cite ? refFor(seg.cite) : undefined;
           const href = seg.cite ? citeHref(seg.cite) : null;
+          // Suppress duplicate: skip [n] if the previous segment already cited the same source
+          const prevKey = i > 0 ? citeKey(segments[i - 1].cite) : null;
+          const showCite = n && href && citeKey(seg.cite) !== prevKey;
           return (
             <span key={i}>
               {seg.text}
-              {n && href && (
+              {showCite && (
                 <a href={href} target="_blank" rel="noreferrer"
                    title={`${seg.cite!.label || "source"}${seg.cite!.page ? ` · p.${seg.cite!.page}` : ""}`}
                    className={`align-super text-[10.5px] font-extrabold hover:underline ${dark ? "text-sky-300 hover:text-sky-200" : "text-sky-600 hover:text-sky-800"}`}>
@@ -281,7 +239,7 @@ export default function CodexPage() {
                 >
                   <div className="relative h-[72px]">
                     <Image
-                      src={`/megatrends/${r.key}.png`}
+                      src={assetUrl(`/megatrends/${r.key}.webp`)}
                       alt={r.name}
                       fill
                       className="object-cover transition duration-300 group-hover:scale-105"
@@ -323,7 +281,7 @@ export default function CodexPage() {
       {/* ── Dossier content ─────────────────────────────────────── */}
       <div className="ml-[220px] min-w-0 flex-1">
       {dossier && presenting && (
-        <PresentMode dossier={dossier} imageSrc={`/megatrends/${selected}.png`}
+        <PresentMode dossier={dossier} imageSrc={assetUrl(`/megatrends/${selected}.webp`)}
                      rank={row?.rank} total={rows.length} onClose={() => setPresenting(false)} />
       )}
 
@@ -343,7 +301,7 @@ export default function CodexPage() {
               {/* Hero — editorial image with scrim, gradient fallback */}
               <div className={`relative overflow-hidden rounded-3xl bg-gradient-to-br ${theme.grad} text-white shadow-lg`}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={`/megatrends/${selected}.png`} alt=""
+                <img src={assetUrl(`/megatrends/${selected}.webp`)} alt=""
                      className="absolute inset-0 h-full w-full object-cover"
                      onError={(e) => { e.currentTarget.style.display = "none"; }} />
                 <div className="absolute inset-0 bg-gradient-to-r from-slate-950/85 via-slate-950/55 to-slate-950/15" />
@@ -424,9 +382,9 @@ export default function CodexPage() {
               <div id="sec-horizons" className="scroll-mt-24">
                 <SectionTitle no="03" eyebrow="Where this goes">The horizons</SectionTitle>
                 <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-3">
-                  <HorizonColumn title="Now" sub="0–12 mo · act" accent="border-t-rose-400" tone="text-rose-600" items={dossier.horizons?.short ?? []} refFor={refFor} />
-                  <HorizonColumn title="Next" sub="1–3 yr · develop" accent="border-t-amber-400" tone="text-amber-600" items={dossier.horizons?.medium ?? []} refFor={refFor} />
-                  <HorizonColumn title="Later" sub="3+ yr · position" accent="border-t-sky-400" tone="text-sky-600" items={dossier.horizons?.long ?? []} refFor={refFor} />
+                  <HorizonColumn title="Now" sub="0–12 mo · act" tone="text-rose-600" items={dossier.horizons?.short ?? []} refFor={refFor} />
+                  <HorizonColumn title="Next" sub="1–3 yr · develop" tone="text-amber-600" items={dossier.horizons?.medium ?? []} refFor={refFor} />
+                  <HorizonColumn title="Later" sub="3+ yr · position" tone="text-sky-600" items={dossier.horizons?.long ?? []} refFor={refFor} />
                 </div>
               </div>
               </Reveal>
@@ -459,7 +417,7 @@ export default function CodexPage() {
                                ${isSel ? `ring-2 ${theme.ring} shadow-xl` : "border border-slate-200 shadow-sm hover:shadow-md hover:border-slate-300"}`}>
                           <div className={`relative overflow-hidden bg-gradient-to-br ${theme.grad} h-[160px]`}>
                             {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img src={`/subtrends/${selected}-${i}.png`} alt=""
+                            <img src={assetUrl(`/subtrends/${selected}-${i}.webp`)} alt=""
                                  className="absolute inset-0 h-full w-full object-cover"
                                  onError={(e) => { e.currentTarget.style.display = "none"; }} />
                             <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-black/10" />
@@ -514,8 +472,16 @@ export default function CodexPage() {
                   const citeForBuild = (b: string) => citeByName.get(b.trim().toLowerCase());
                   return (
                     <div className="mt-4 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-                      <div className={`h-1 w-full ${theme.bar}`} />
                       <div className="px-7 py-5">
+                        {/* Subtrend definition */}
+                        {s.description && (
+                          <div className="mb-6 border-b border-slate-100 pb-6">
+                            <p className="mb-2 flex items-center gap-2 text-[10.5px] font-bold uppercase tracking-[0.18em] text-slate-400">
+                              <span className="h-1.5 w-1.5 rounded-full bg-slate-300" /> What this subtrend is about
+                            </p>
+                            <p className="text-[14.5px] leading-relaxed text-slate-700">{s.description}</p>
+                          </div>
+                        )}
                         <div className={`grid grid-cols-1 gap-7 ${hasConsumer ? "lg:grid-cols-5" : ""}`}>
                           {opps.length > 0 && (
                             <div className={hasConsumer ? "lg:col-span-3" : ""}>
@@ -636,7 +602,7 @@ export default function CodexPage() {
                 {/* Row 1: Questions + Existing portfolio */}
                 <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
                   {/* How might Tyson? */}
-                  <div className="rounded-2xl border border-slate-200 border-t-4 border-t-amber-400 bg-white p-6 shadow-sm">
+                  <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
                     <p className="text-[10.5px] font-bold uppercase tracking-[0.18em] text-amber-600">How might Tyson…?</p>
                     <ul className="mt-3 space-y-2">
                       {dossier.tyson_questions?.map((q, i) => {
@@ -654,7 +620,7 @@ export default function CodexPage() {
                   </div>
 
                   {/* Already in Tyson's portfolio */}
-                  <div className="rounded-2xl border border-slate-200 border-t-4 border-t-emerald-400 bg-white p-6 shadow-sm">
+                  <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
                     <p className="text-[10.5px] font-bold uppercase tracking-[0.18em] text-emerald-600">Already in Tyson&apos;s portfolio</p>
                     <p className="mt-0.5 text-[11px] text-slate-400">Products already riding this trend</p>
                     {dossier.tyson_portfolio?.length ? (
@@ -684,7 +650,7 @@ export default function CodexPage() {
                 </div>
 
                 {/* Row 2: White space + new concepts — full-width card grid */}
-                <div className="mt-4 rounded-2xl border border-slate-200 border-t-4 border-t-indigo-400 bg-white p-6 shadow-sm">
+                <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
                   <p className="text-[10.5px] font-bold uppercase tracking-[0.18em] text-indigo-600">White space &amp; new concepts</p>
                   <p className="mt-0.5 text-[11px] text-slate-400">Market gaps and net-new Tyson concept ideas — territory nobody has claimed yet</p>
                   {(() => {
@@ -708,7 +674,7 @@ export default function CodexPage() {
                                 {w.note && <p className="text-[13px] leading-relaxed text-slate-600">{w.note}</p>}
                                 {w.cite && (
                                   <div className="mt-auto pt-1">
-                                    <CiteLink cite={w.cite} refNo={refFor(w.cite)} />
+                                    <CiteLink cite={w.cite} />
                                   </div>
                                 )}
                               </div>
@@ -722,7 +688,7 @@ export default function CodexPage() {
                             return (
                               <div key={i} className="flex flex-col gap-2 rounded-xl border border-violet-100 bg-violet-50 p-4">
                                 <div className="flex items-start justify-between gap-2">
-                                  <span className="text-[14px] font-bold leading-snug text-slate-900">{it.name}</span>
+                                  <span className="text-[14px] font-bold leading-snug text-slate-900">{stripBrand(it.name, it.brand)}</span>
                                   <div className="flex shrink-0 flex-wrap justify-end gap-1">
                                     {tierStyle && (
                                       <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${tierStyle.badge}`}>
@@ -793,12 +759,12 @@ export default function CodexPage() {
                   {dossier.sources?.map((s, i) => (
                     s.report_id ? (
                       <span key={i} className="inline-flex items-center gap-1">
-                        <a href={`/api/file/${s.report_id}`} target="_blank" rel="noreferrer"
+                        <a href={apiUrl(`/file/${s.report_id}`)} target="_blank" rel="noreferrer"
                            className={`rounded-lg px-2.5 py-1.5 text-[13px] font-semibold hover:opacity-75 ${TAG_STYLE[s.source_tag ?? ""] ?? "bg-slate-100 text-slate-600"}`}
                            title="Open the original document">
                           📄 {s.label}
                         </a>
-                        <Link href={`/report/${s.report_id}`}
+                        <Link href={`/report?id=${s.report_id}`}
                               className="rounded-md bg-slate-50 px-1.5 py-1.5 text-[11px] font-medium text-slate-400 hover:text-slate-600"
                               title="Open the extracted view in TrendLens">
                           tree
