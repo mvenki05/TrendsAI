@@ -92,17 +92,6 @@ export default function MegatrendsPage() {
             Synthesized from agencies, Mintel, Hartman Group, and Tyson&apos;s own digests.
             Ranked by evidence strength — click any to open its full dossier.
           </p>
-          <div className="mt-7 flex flex-wrap justify-center gap-2 text-[12px]">
-            <span className="rounded-full border border-white/15 bg-white/10 px-3.5 py-1.5 font-medium text-white/80 backdrop-blur-sm">
-              📄 Source-grounded
-            </span>
-            <span className="rounded-full border border-white/15 bg-white/10 px-3.5 py-1.5 font-medium text-white/80 backdrop-blur-sm">
-              📈 Demand-measured
-            </span>
-            <span className="rounded-full border border-white/15 bg-white/10 px-3.5 py-1.5 font-medium text-white/80 backdrop-blur-sm">
-              🔗 Fully cited
-            </span>
-          </div>
         </div>
 
         {/* Bottom fade into page bg */}

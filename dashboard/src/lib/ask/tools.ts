@@ -101,29 +101,13 @@ export const TOOL_DEFS = [
   {
     type: "function" as const,
     function: {
-      name: "search_trends_numeric",
-      description:
-        "Look up actual Google Trends search-interest measurements TrendLens has captured for a specific term " +
-        "(current interest 0-100, year-over-year % change, whether it's rising). Checks both terms extracted from " +
-        "ingested reports AND terms measured on-demand for a past chat question. Use whenever a question asks " +
-        "about real demand/popularity numbers for a specific food, ingredient, or product term. If it returns " +
-        "nothing, say plainly that TrendLens has no measurement for that exact term — do not estimate or guess.",
-      parameters: {
-        type: "object",
-        properties: {
-          term: { type: "string", description: "The specific term to look up, e.g. 'protein chips', 'birria tacos'." },
-        },
-        required: ["term"],
-      },
-    },
-  },
-  {
-    type: "function" as const,
-    function: {
       name: "list_tyson_products",
       description:
         "Look up Tyson's actual existing product catalog (~6,300 SKUs) by category, brand, or keyword. Use to check " +
-        "whether Tyson already has a product in a given space before claiming something is white space.",
+        "whether Tyson already has a product in a given space before claiming something is white space. The catalog " +
+        "holds only item names, brands, categories and segments; it does NOT record claims such as organic, natural " +
+        "or no antibiotics ever, so do not search for claims. If the question turns on such a claim, say in one " +
+        "plain sentence that the catalog does not record it.",
       parameters: {
         type: "object",
         properties: {
@@ -154,7 +138,6 @@ interface DossierJSON {
   key_stats?: { stat: string; cite?: Cite }[];
   subtrends?: { name: string; description?: string; geo?: string | null; opportunities?: { name: string; concept: string; tyson_fit?: { tier?: string } }[] }[];
   horizons?: Record<"short" | "medium" | "long", { title: string; detail: string; cite?: Cite }[]>;
-  demand?: { summary?: string; risers?: { term: string; yoy: number }[]; decliners?: { term: string; yoy: number }[] };
   tyson_questions?: (string | { question: string; cite?: Cite | null })[];
   whitespace?: { name: string; note?: string; cite?: Cite }[];
 }
@@ -182,11 +165,6 @@ function curateDossier(raw: string) {
       short: d.horizons.short?.slice(0, 4),
       medium: d.horizons.medium?.slice(0, 4),
       long: d.horizons.long?.slice(0, 4),
-    },
-    demand: d.demand && {
-      summary: d.demand.summary,
-      risers: d.demand.risers?.slice(0, 5),
-      decliners: d.demand.decliners?.slice(0, 5),
     },
     tyson_questions: d.tyson_questions?.slice(0, 8),
     whitespace: d.whitespace?.slice(0, 6),
@@ -334,37 +312,6 @@ async function searchIdeas(q: string) {
   };
 }
 
-async function searchTrendsNumeric(term: string) {
-  // interest_series (12 months of weekly Google Trends ints, as a JSON string) rides along
-  // on every row here purely so the API route can pull real sparkline data out of it — the
-  // route strips it back off before the row goes to the model, to avoid spending tokens on
-  // a 52-number array it doesn't need to see.
-  const [fromReports, adhoc] = await Promise.all([
-    query<{ term: string; node_name: string | null; megatrend_name: string | null; subtrend_name: string | null; current_interest: number | null; yoy_growth: number | null; is_rising: boolean | null; interest_series: string | null }>(
-      `SELECT term, node_name, megatrend_name, subtrend_name, current_interest, yoy_growth, is_rising, interest_series
-       FROM ${T}.trend_searches\`
-       WHERE SEARCH(term, @q) OR SEARCH(node_name, @q)
-       ORDER BY week_of DESC
-       LIMIT ${LIMIT}`,
-      { q: term },
-    ),
-    // Terms measured on-demand for a past chat question (see scripts/measure_term.py) —
-    // covers terms that were never part of an ingested report's taxonomy.
-    query<{ term: string; current_interest: number | null; yoy_growth: number | null; is_rising: boolean | null; classification: string | null; interest_series: string | null }>(
-      `SELECT term, current_interest, yoy_growth, is_rising, classification, interest_series
-       FROM ${T}.chat_trend_lookups\`
-       WHERE SEARCH(term, @q)
-       ORDER BY measured_at DESC
-       LIMIT ${LIMIT}`,
-      { q: term },
-    ).catch(() => []),
-  ]);
-  return {
-    from_report_taxonomy: fromReports,
-    on_demand_measurements: adhoc,
-  };
-}
-
 async function listTysonProducts(q: string) {
   return query<{ item: string | null; brand: string | null; category: string | null; segment: string | null }>(
     `SELECT item, brand, category, segment
@@ -378,7 +325,13 @@ async function listTysonProducts(q: string) {
 export async function runTool(name: string, args: Record<string, unknown>): Promise<unknown> {
   // SEARCH() (unlike CONTAINS_SUBSTR) errors on a query with no tokens, so a blank
   // arg must be rejected here rather than reaching BigQuery.
-  const q = String(args.query ?? args.term ?? "").trim();
+  // SEARCH() also throws a parse error on punctuation such as & - / ' (e.g. "Trust &
+  // Transparency", "clean-label"), which the model then reads as "no results". Reduce the
+  // text to plain word tokens before it reaches BigQuery.
+  const q = String(args.query ?? args.term ?? "")
+    .replace(/[^\p{L}\p{N}\s]+/gu, " ")
+    .replace(/\s+/g, " ")
+    .trim();
   if (!q) return { error: "Empty search query — provide keywords to search for." };
 
   switch (name) {
@@ -392,8 +345,6 @@ export async function runTool(name: string, args: Record<string, unknown>): Prom
       return searchInsights(q);
     case "search_ideas":
       return searchIdeas(q);
-    case "search_trends_numeric":
-      return searchTrendsNumeric(q);
     case "list_tyson_products":
       return listTysonProducts(q);
     default:

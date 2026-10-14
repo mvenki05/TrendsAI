@@ -739,6 +739,8 @@ function TrendMapSection({ nodes }: { nodes: MapNode[] }) {
   const megatrends = nodes.filter((n) => n.level === "megatrend");
   const unassigned = nodes.filter((n) => n.level !== "megatrend" && n.level !== "subtrend" && !n.megatrend_name);
   const builtDate = megatrends[0]?.created_at ? new Date(megatrends[0].created_at).toLocaleString() : null;
+  const [openIds, setOpenIds] = useState<Set<string>>(new Set());
+  const [onlyNew, setOnlyNew] = useState(false);
 
   if (megatrends.length === 0) {
     return (
@@ -751,59 +753,102 @@ function TrendMapSection({ nodes }: { nodes: MapNode[] }) {
     );
   }
 
+  const subCount = nodes.filter((n) => n.level === "subtrend").length;
+  const signalCount = nodes.filter((n) => n.level !== "megatrend" && n.level !== "subtrend").length;
+  const newCount = megatrends.filter((m) => !m.overlap_deck).length;
+  const shown = onlyNew ? megatrends.filter((m) => !m.overlap_deck) : megatrends;
+  const toggle = (id: string) =>
+    setOpenIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+
   return (
     <div className="space-y-4">
-      {builtDate && <p className="text-xs text-slate-400">Last build: {builtDate}</p>}
-      {megatrends.map((m, i) => {
+      <div className="rounded-2xl border border-slate-100 bg-white px-6 py-5 shadow-[0_4px_24px_rgba(0,0,0,0.07)]">
+        <p className="max-w-3xl text-sm leading-relaxed text-slate-600">
+          We built this map from scratch using news and market data, without looking at your uploaded reports.
+          Each <span className="font-semibold text-slate-800">megatrend</span> is a big shift, split into
+          <span className="font-semibold text-slate-800"> subtrends</span>, backed by
+          <span className="font-semibold text-slate-800"> signals</span> (products, ingredients, behaviours).
+          Then we checked whether your reports already cover each megatrend.
+        </p>
+        <div className="mt-4 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
+          <span><b className="text-slate-900">{megatrends.length}</b> <span className="text-slate-500">megatrends</span></span>
+          <span><b className="text-slate-900">{subCount}</b> <span className="text-slate-500">subtrends</span></span>
+          <span><b className="text-slate-900">{signalCount}</b> <span className="text-slate-500">signals</span></span>
+          <span><b className="text-rose-700">{newCount}</b> <span className="text-slate-500">new vs. your reports</span></span>
+          {builtDate && <span className="text-xs text-slate-400">Last build: {builtDate}</span>}
+        </div>
+        <div className="mt-4 flex flex-wrap gap-2">
+          <button onClick={() => setOnlyNew((v) => !v)}
+            className={`rounded-full px-3 py-1 text-xs font-semibold transition-colors ${onlyNew ? "bg-rose-600 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}>
+            {onlyNew ? "Showing only new ✕" : "Show only new vs. reports"}
+          </button>
+          <button onClick={() => setOpenIds(new Set(shown.map((m) => m.node_id)))}
+            className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600 hover:bg-slate-200">Expand all</button>
+          <button onClick={() => setOpenIds(new Set())}
+            className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600 hover:bg-slate-200">Collapse all</button>
+        </div>
+      </div>
+
+      {shown.map((m) => {
+        const i = megatrends.indexOf(m);
         const subs = nodes.filter((n) => n.level === "subtrend" && n.megatrend_name === m.name);
+        const sigs = nodes.filter((n) => n.megatrend_name === m.name && n.level !== "megatrend" && n.level !== "subtrend").length;
+        const open = openIds.has(m.node_id);
         return (
           <div key={m.node_id} className="overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-[0_4px_24px_rgba(0,0,0,0.07)]">
-            <div className="px-6 pt-5 pb-4">
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div className="flex min-w-0 items-center gap-3">
-                  <span className={`h-3 w-3 shrink-0 rounded-full ${MAP_ACCENT_DOT[i % MAP_ACCENT_DOT.length]}`} />
-                  <h2 className="text-lg font-bold leading-snug text-slate-900">{m.name}</h2>
-                </div>
-                <div className="flex flex-wrap gap-1.5">
+            <button onClick={() => toggle(m.node_id)} className="flex w-full items-start gap-3 px-6 py-4 text-left hover:bg-slate-50">
+              <span className={`mt-1.5 h-3 w-3 shrink-0 rounded-full ${MAP_ACCENT_DOT[i % MAP_ACCENT_DOT.length]}`} />
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                  <h2 className="text-base font-bold leading-snug text-slate-900">{m.name}</h2>
                   <MapGeoBadge geo={m.geo} />
                   {m.overlap_deck ? (
-                    <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-semibold text-slate-600"
-                          title={`The uploaded decks call this "${m.overlap_deck}"`}>
-                      ✓ decks agree
+                    <span className="rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-700"
+                          title={`Your reports call this "${m.overlap_deck}"`}>
+                      ✓ Also in your reports
                     </span>
                   ) : (
                     <span className="rounded-full bg-rose-100 px-2.5 py-0.5 text-xs font-bold text-rose-700">
-                      NEW: not in decks
+                      New vs. your reports
                     </span>
                   )}
                 </div>
+                {m.description && (
+                  <p className={`mt-1 max-w-3xl text-sm leading-relaxed text-slate-500 ${open ? "" : "line-clamp-2"}`}>{m.description}</p>
+                )}
+                <p className="mt-1 text-xs text-slate-400">{subs.length} subtrends · {sigs} signals</p>
               </div>
-              {m.description && (
-                <p className="mt-2 ml-6 max-w-3xl text-sm leading-relaxed text-slate-500">{m.description}</p>
-              )}
-            </div>
-            <div className="space-y-4 border-t border-slate-100 px-6 py-5">
-              {subs.map((s) => {
-                const kids = nodes.filter((n) => n.parent_id === s.node_id);
-                return (
-                  <div key={s.node_id}>
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-bold text-slate-700">{s.name}</span>
-                      <MapGeoBadge geo={s.geo} />
+              <span className="mt-1 shrink-0 text-slate-400">{open ? "▾" : "▸"}</span>
+            </button>
+            {open && (
+              <div className="space-y-5 border-t border-slate-100 px-6 py-5">
+                {subs.map((s) => {
+                  const kids = nodes.filter((n) => n.parent_id === s.node_id);
+                  return (
+                    <div key={s.node_id}>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-bold text-slate-700">{s.name}</span>
+                        <MapGeoBadge geo={s.geo} />
+                        <span className="text-[11px] text-slate-400">{kids.length} signals</span>
+                      </div>
+                      {s.description && <div className="mt-0.5 max-w-3xl text-xs text-slate-500">{s.description}</div>}
+                      <div className="mt-2 grid grid-cols-1 gap-2 md:grid-cols-2 xl:grid-cols-3">
+                        {kids.map((n) => <MapEntityChip key={n.node_id} n={n} />)}
+                      </div>
                     </div>
-                    {s.description && <div className="mt-0.5 text-[11px] text-slate-400">{s.description}</div>}
-                    <div className="mt-2 grid grid-cols-1 gap-2 md:grid-cols-2 xl:grid-cols-3">
-                      {kids.map((n) => <MapEntityChip key={n.node_id} n={n} />)}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         );
       })}
 
-      {unassigned.length > 0 && (
+      {unassigned.length > 0 && !onlyNew && (
         <details className="rounded-2xl border border-slate-100 bg-white px-6 py-4 shadow-[0_4px_24px_rgba(0,0,0,0.07)]">
           <summary className="cursor-pointer text-sm font-semibold text-slate-500">
             {unassigned.length} corroborated signals not (yet) part of any megatrend
@@ -832,7 +877,7 @@ export default function DiscoverPage() {
   const [discovering, setDiscovering] = useState(false);
   const [scouting, setScouting] = useState(false);
   const [building, setBuilding] = useState(false);
-  const [runResult, setRunResult] = useState<{ ok: boolean; message: string } | null>(null);
+  const [runResult, setRunResult] = useState<{ ok: boolean; message: string; output?: string } | null>(null);
 
   const load = useCallback(async () => {
     const [marketRes, labRes, mapRes] = await Promise.all([
@@ -873,7 +918,7 @@ export default function DiscoverPage() {
         setRunResult({ ok: true, message: "Scout run complete." });
         load();
       } else {
-        setRunResult({ ok: false, message: data.error || `Scout run failed (${res.status}).` });
+        setRunResult({ ok: false, message: data.error || `Scout run failed (${res.status}).`, output: data.output });
       }
     } catch (err) {
       setRunResult({ ok: false, message: err instanceof Error ? err.message : "Scout run request failed." });
@@ -975,6 +1020,9 @@ export default function DiscoverPage() {
               : "border-rose-200 bg-rose-50 text-rose-800"
           }`}>
             {runResult.message}
+            {!runResult.ok && runResult.output && (
+              <pre className="mt-3 max-h-64 overflow-auto whitespace-pre-wrap rounded-lg bg-white/70 p-3 text-xs text-slate-700">{runResult.output}</pre>
+            )}
           </div>
         )}
 

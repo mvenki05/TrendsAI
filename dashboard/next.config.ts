@@ -19,6 +19,23 @@ const nextConfig: NextConfig = hosted
       trailingSlash: true,
       images: { unoptimized: true },
     }
-  : {};
+  : {
+      // Baseline security headers for the server-rendered app (a static export can't set
+      // headers; the host serving dist/trends/ is responsible for those). No CSP yet: Next's
+      // dev tooling and inline styles need a tuned policy, so adding one blind would break pages.
+      async headers() {
+        return [
+          {
+            source: "/:path*",
+            headers: [
+              { key: "X-Content-Type-Options", value: "nosniff" },
+              { key: "X-Frame-Options", value: "SAMEORIGIN" },
+              { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+              { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
+            ],
+          },
+        ];
+      },
+    };
 
 export default nextConfig;

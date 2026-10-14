@@ -338,41 +338,14 @@ export default function CodexPage() {
                 </div>
               </div>
 
-              {/* Now + demand side by side */}
+              {/* What's happening now (full width) */}
               <Reveal>
-              <div id="sec-now" className="grid scroll-mt-24 grid-cols-1 gap-4 lg:grid-cols-5">
-                <div className="rounded-2xl border border-slate-200 bg-white p-7 shadow-sm lg:col-span-3">
+              <div id="sec-now" className="scroll-mt-24">
+                <div className="rounded-2xl border border-slate-200 bg-white p-7 shadow-sm">
                   <SectionTitle no="01" eyebrow="The present">What&apos;s happening now</SectionTitle>
                   <p className="mt-4 text-[15px] leading-[1.75] text-slate-700">
                     <CitedProse segments={dossier.now_cited} fallback={dossier.now} />
                   </p>
-                </div>
-                <div className="rounded-2xl border border-slate-200 bg-white p-7 shadow-sm lg:col-span-2">
-                  <SectionTitle no="02" eyebrow="Google Trends · YoY">Measured demand</SectionTitle>
-                  <p className="mt-4 text-[13px] leading-relaxed text-slate-500">{dossier.demand?.summary}</p>
-                  {(() => {
-                    const risers = dossier.demand?.risers ?? [];
-                    const decliners = dossier.demand?.decliners ?? [];
-                    const maxAbs = Math.max(1, ...risers.map((r) => Math.abs(r.yoy)), ...decliners.map((r) => Math.abs(r.yoy)));
-                    const Bar = ({ term, yoy, up }: { term: string; yoy: number; up: boolean }) => (
-                      <div className="flex items-center gap-2.5">
-                        <span className="w-32 shrink-0 truncate text-[12.5px] font-semibold text-slate-700" title={term}>{term}</span>
-                        <div className="h-[7px] flex-1 overflow-hidden rounded-full bg-slate-100">
-                          <div className={`h-full rounded-full ${up ? "bg-emerald-500" : "bg-rose-400"}`}
-                               style={{ width: `${Math.max(6, (Math.abs(yoy) / maxAbs) * 100)}%` }} />
-                        </div>
-                        <span className={`w-12 shrink-0 text-right text-[12px] font-bold tabular-nums ${up ? "text-emerald-600" : "text-rose-500"}`}>
-                          {up ? "+" : ""}{Math.round(yoy)}%
-                        </span>
-                      </div>
-                    );
-                    return (
-                      <div className="mt-4 space-y-1.5">
-                        {risers.map((r, i) => <Bar key={`r${i}`} term={r.term} yoy={r.yoy} up />)}
-                        {decliners.map((r, i) => <Bar key={`d${i}`} term={r.term} yoy={r.yoy} up={false} />)}
-                      </div>
-                    );
-                  })()}
                 </div>
               </div>
               </Reveal>
@@ -380,7 +353,7 @@ export default function CodexPage() {
               {/* Horizons */}
               <Reveal>
               <div id="sec-horizons" className="scroll-mt-24">
-                <SectionTitle no="03" eyebrow="Where this goes">The horizons</SectionTitle>
+                <SectionTitle no="02" eyebrow="Where this goes">The horizons</SectionTitle>
                 <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-3">
                   <HorizonColumn title="Now" sub="0–12 mo · act" tone="text-rose-600" items={dossier.horizons?.short ?? []} refFor={refFor} />
                   <HorizonColumn title="Next" sub="1–3 yr · develop" tone="text-amber-600" items={dossier.horizons?.medium ?? []} refFor={refFor} />
@@ -392,7 +365,7 @@ export default function CodexPage() {
               {/* Subtrends */}
               <div id="sec-subtrends" className="scroll-mt-24">
                 <Reveal>
-                <SectionTitle no="04" eyebrow="The anatomy">Subtrends &amp; opportunities</SectionTitle>
+                <SectionTitle no="03" eyebrow="The anatomy">Subtrends &amp; opportunities</SectionTitle>
                 </Reveal>
                 {/* Carousel track */}
                 <div className="relative mt-4">
@@ -430,15 +403,12 @@ export default function CodexPage() {
                               )}
                             </div>
                           </div>
-                          <div className="bg-white px-5 py-4">
-                            <p className="text-[12px] leading-relaxed text-slate-500 line-clamp-3">{s.description}</p>
-                            {s.opportunities?.[0] && (
-                              <div className="mt-3 border-t border-slate-100 pt-3">
-                                <p className="mb-1 text-[9px] font-extrabold uppercase tracking-[0.2em] text-sky-500">Top opportunity</p>
-                                <p className="text-[12.5px] font-semibold leading-snug text-slate-800 line-clamp-2">{s.opportunities[0].name}</p>
-                              </div>
-                            )}
-                          </div>
+                          {s.opportunities?.[0] && (
+                            <div className="bg-white px-5 py-4">
+                              <p className="mb-1 text-[9px] font-extrabold uppercase tracking-[0.2em] text-sky-500">Top opportunity</p>
+                              <p className="text-[12.5px] font-semibold leading-snug text-slate-800 line-clamp-2">{s.opportunities[0].name}</p>
+                            </div>
+                          )}
                         </div>
                       );
                     })}
@@ -581,7 +551,7 @@ export default function CodexPage() {
               {/* Key stats — dense two-column cards */}
               <Reveal>
               <div id="sec-stats" className="scroll-mt-24">
-                <SectionTitle no="05" eyebrow="The evidence">Key statistics</SectionTitle>
+                <SectionTitle no="04" eyebrow="The evidence">Key statistics</SectionTitle>
                 <div className="mt-4 grid grid-cols-1 gap-2.5 md:grid-cols-2">
                   {dossier.key_stats?.map((s, i) => (
                     <div key={i} className="flex items-start gap-3 rounded-xl border border-slate-200 border-l-4 border-l-emerald-400 bg-white px-4 py-3 shadow-sm">
@@ -597,7 +567,7 @@ export default function CodexPage() {
               {/* Tyson layer */}
               <Reveal>
               <div id="sec-tyson" className="scroll-mt-24">
-                <SectionTitle no="06" eyebrow="From trend to action">The Tyson layer</SectionTitle>
+                <SectionTitle no="05" eyebrow="From trend to action">The Tyson layer</SectionTitle>
 
                 {/* Row 1: Questions + Existing portfolio */}
                 <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
@@ -730,7 +700,7 @@ export default function CodexPage() {
               <div id="sec-sources" className="scroll-mt-24 rounded-2xl border border-slate-200 bg-white p-7 shadow-sm">
                 {refList.length > 0 && (
                   <div className="mb-7">
-                    <SectionTitle no="07" eyebrow="Check everything">References</SectionTitle>
+                    <SectionTitle no="06" eyebrow="Check everything">References</SectionTitle>
                     <p className="mt-1 text-xs text-slate-400">
                       Every numbered claim above resolves here. Click to open the exact source (📄 documents open at the cited page).
                     </p>

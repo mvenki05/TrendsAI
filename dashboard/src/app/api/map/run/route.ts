@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import path from "path";
 import { spawn } from "child_process";
 import { PYTHON_BIN } from "@/lib/python-bin";
+import { rateLimit } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 export const maxDuration = 900;
@@ -10,7 +11,9 @@ export const maxDuration = 900;
 // actually finish, so the caller gets a real result instead of a fire-and-forget "ok".
 let running = false;
 
-export async function POST() {
+export async function POST(req: Request) {
+  const limited = rateLimit(req, "map-run", 6, 60 * 60_000);
+  if (limited) return limited;
   if (running) {
     return NextResponse.json(
       { status: "error", error: "A map build is already in progress — wait for it to finish." },

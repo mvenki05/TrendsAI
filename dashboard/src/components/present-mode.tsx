@@ -163,7 +163,7 @@ export function PresentMode({ dossier, imageSrc, rank, total, onClose }: {
     );
   }
 
-  // Now + demand
+  // Now
   {
     const i = idx++;
     slides.push(
@@ -174,21 +174,7 @@ export function PresentMode({ dossier, imageSrc, rank, total, onClose }: {
             <h2 className="mt-2 font-display text-4xl font-semibold">What&apos;s happening now</h2>
           </Stagger>
           <Stagger active={active === i} i={2}>
-            <p className="mt-6 max-w-3xl text-[17px] leading-[1.8] text-white/85">{dossier.now}</p>
-          </Stagger>
-          <Stagger active={active === i} i={3} className="mt-8">
-            <div className="flex flex-wrap gap-2.5">
-              {(dossier.demand?.risers ?? []).slice(0, 8).map((r, k) => (
-                <span key={k} className="rounded-full bg-emerald-400/15 px-3.5 py-1.5 text-sm font-bold text-emerald-300 ring-1 ring-emerald-400/30">
-                  ▲ {r.term} +{Math.round(r.yoy)}%
-                </span>
-              ))}
-              {(dossier.demand?.decliners ?? []).slice(0, 4).map((r, k) => (
-                <span key={k} className="rounded-full bg-rose-400/15 px-3.5 py-1.5 text-sm font-bold text-rose-300 ring-1 ring-rose-400/30">
-                  ▼ {r.term} {Math.round(r.yoy)}%
-                </span>
-              ))}
-            </div>
+            <p className="mt-6 text-[17px] leading-[1.8] text-white/85">{dossier.now}</p>
           </Stagger>
         </div>
       </Slide>,

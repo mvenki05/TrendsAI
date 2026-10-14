@@ -166,7 +166,7 @@ function CountUp({ value }: { value: number }) {
 
 const ASK_EXAMPLES = [
   "What's driving Tyson's #1 megatrend, The Protein Era?",
-  "Is demand for protein snacks actually rising?",
+  "Which protein opportunities look strongest for Tyson?",
   "What's Tyson's white space in clean label?",
 ];
 
