@@ -2,11 +2,14 @@ import { NextResponse } from "next/server";
 import path from "path";
 import { spawn } from "child_process";
 import { PYTHON_BIN } from "@/lib/python-bin";
+import { rateLimit } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 
 // Trigger the Google Trends measurement for a report (browser-based, cached).
-export async function POST(_req: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const limited = rateLimit(req, "measure", 20, 60 * 60_000);
+  if (limited) return limited;
   try {
     const { id } = await params;
     if (!/^rep_[a-z0-9]+$/.test(id)) {

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import path from "path";
 import { spawn } from "child_process";
 import { PYTHON_BIN } from "@/lib/python-bin";
+import { rateLimit } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 export const maxDuration = 900;
@@ -16,7 +17,9 @@ export const maxDuration = 900;
 // run finishing first would have its update clobbered by the first run's stale write.
 let running = false;
 
-export async function POST() {
+export async function POST(req: Request) {
+  const limited = rateLimit(req, "refresh-demand", 6, 60 * 60_000);
+  if (limited) return limited;
   if (running) {
     return NextResponse.json(
       { status: "error", error: "A demand refresh is already running — wait for it to finish." },

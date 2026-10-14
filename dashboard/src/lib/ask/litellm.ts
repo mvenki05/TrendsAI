@@ -51,7 +51,7 @@ export async function chatCompletion(
       // was still getting cut off mid-JSON on richly-cited answers, silently zeroing out
       // citations client-side. parse-citations.ts salvages whatever citations parse
       // as complete before a cutoff, but a higher ceiling means hitting one at all is rarer.
-      max_tokens: opts?.maxTokens ?? 3200,
+      max_tokens: opts?.maxTokens ?? 5000,
     }),
   });
   if (!res.ok) {

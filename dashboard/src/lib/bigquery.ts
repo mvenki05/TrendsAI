@@ -28,7 +28,13 @@ export async function query<T = Record<string, unknown>>(
   sql: string,
   params?: Record<string, unknown>
 ): Promise<T[]> {
-  const options: { query: string; params?: Record<string, unknown> } = { query: sql };
+  // Cost/time guardrails on every job: BigQuery rejects a query that would bill more than the
+  // cap (default 20 GB, override with BQ_MAX_BYTES_BILLED) and cancels one that runs too long.
+  const options: { query: string; params?: Record<string, unknown>; maximumBytesBilled: string; jobTimeoutMs: number } = {
+    query: sql,
+    maximumBytesBilled: process.env.BQ_MAX_BYTES_BILLED || String(20 * 1024 ** 3),
+    jobTimeoutMs: Number(process.env.BQ_JOB_TIMEOUT_MS) || 120_000,
+  };
   if (params) options.params = params;
   const [rows] = await client.query(options);
   return (rows as unknown[]).map((r) => flattenBQValue(r)) as T[];

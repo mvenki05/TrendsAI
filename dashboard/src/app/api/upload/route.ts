@@ -5,18 +5,30 @@ import { spawn } from "child_process";
 import { PYTHON_BIN } from "@/lib/python-bin";
 import { randomBytes } from "crypto";
 import { query, DATASET, PROJECT_ID } from "@/lib/bigquery";
+import { rateLimit } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
 
 const ALLOWED = [".pptx", ".pdf"];
 
+const MAX_UPLOAD_BYTES = 150 * 1024 * 1024;
+
 export async function POST(req: Request) {
+  const limited = rateLimit(req, "upload", 15, 60 * 60_000);
+  if (limited) return limited;
+  // Reject on the declared size before buffering the multipart body into memory.
+  if (Number(req.headers.get("content-length") ?? 0) > MAX_UPLOAD_BYTES + 1024 * 1024) {
+    return NextResponse.json({ error: "File too large (max 150 MB)" }, { status: 413 });
+  }
   try {
     const form = await req.formData();
     const file = form.get("file");
     if (!file || typeof file === "string") {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });
+    }
+    if (file.size > MAX_UPLOAD_BYTES) {
+      return NextResponse.json({ error: "File too large (max 150 MB)" }, { status: 413 });
     }
     const ext = path.extname(file.name).toLowerCase();
     if (!ALLOWED.includes(ext)) {

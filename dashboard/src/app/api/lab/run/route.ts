@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import path from "path";
 import { spawn } from "child_process";
 import { PYTHON_BIN } from "@/lib/python-bin";
+import { rateLimit } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 export const maxDuration = 1800;
@@ -14,7 +15,9 @@ export const maxDuration = 1800;
 // just said "Scouting..." forever with no way to tell it had actually died.
 let running = false;
 
-export async function POST() {
+export async function POST(req: Request) {
+  const limited = rateLimit(req, "lab-run", 6, 60 * 60_000);
+  if (limited) return limited;
   if (running) {
     return NextResponse.json(
       { status: "error", error: "A scout run is already in progress — wait for it to finish." },
